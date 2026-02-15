@@ -1,34 +1,54 @@
 /**
  * @file DomScanner.js
- * @description Scansiona il DOM e istanzia i componenti UI corrispondenti.
- * @version 0.1.2
+ * @description Gestore attivazione componenti con attesa asincrona del costruttore.
+ * @version 0.1.10
  */
 
 Objectis.scanDocument = function(O_ROOT) {
     Objectis.trackCall("scanDocument");
-
     var var_o_base = O_ROOT || document;
     var var_a_nodes = var_o_base.getElementsByTagName("div");
+    
     var var_n_i = 0;
-
     for (var_n_i = 0; var_n_i < var_a_nodes.length; var_n_i++) {
         var var_o_current = var_a_nodes[var_n_i];
         var var_s_className = var_o_current.className || "";
 
-        // Logica di instanziamento basata su classi specifiche
-        if (var_s_className.indexOf("obj-button") !== -1) {
-            // Istanzia il componente Button
-            new Objectis.Button(var_o_current);
-            
-            if (const_B_DEBUG) {
-                window.status = "Scanner: Activated Button on " + var_o_current.id;
-            }
+        // Log di debug per ogni div trovato per capire cosa vede lo scanner
+        if (const_B_DEBUG) {
+            window.status = "Scansione div " + var_n_i + " con classe: " + var_s_className;
         }
 
+        // Controllo per il Panel
         if (var_s_className.indexOf("obj-panel") !== -1) {
-            new Objectis.Panel(var_o_current);
+            Objectis.activateComponent(var_o_current, "Panel", "ui/Panel.js");
         }
+
+        // Controllo per il Button
+        if (var_s_className.indexOf("obj-button") !== -1) {
+            Objectis.activateComponent(var_o_current, "Button", "ui/Button.js");
+        }
+    }
+};
+
+Objectis.activateComponent = function(O_EL, S_COMP_NAME, S_PATH) {
+    // Debug estremo: vediamo se la funzione viene chiamata
+    if (const_B_DEBUG) {
+        window.status = "Tentativo attivazione: " + S_COMP_NAME;
+    }
+
+    if (typeof Objectis[S_COMP_NAME] === "function") {
+        new Objectis[S_COMP_NAME](O_EL);
+        O_EL.var_b_isObjectisInstanced = true;
+        Objectis.logError("OK: " + S_COMP_NAME + " istanziato.");
+    } else {
+        // Se arriviamo qui, il JS non è ancora pronto. 
+        // Verifichiamo se loadModule sta almeno provando a caricarlo.
+        Objectis.logError("In attesa di: " + S_PATH);
+        Objectis.loadModule(S_PATH);
         
-        // Qui aggiungeremo gli altri componenti (obj-slider, obj-panel, ecc.)
+        setTimeout(function() {
+            Objectis.activateComponent(O_EL, S_COMP_NAME, S_PATH);
+        }, 500); // Aumentiamo a 500ms per vedere il log rallentato
     }
 };

@@ -1,18 +1,19 @@
 /**
  * @file TimeEngine.js
- * @description Gestore centralizzato del tempo e dei timestamp di sistema.
- * @version 0.0.5
+ * @description Gestore del tempo e dei timestamp per il framework.
+ * @version 0.0.12
  */
 
 /**
  * @function getTimestamp
  * @description Ritorna il timestamp corrente in millisecondi.
- * @return {Number} var_n_now - Timestamp attuale.
+ * @return {Number} var_n_time - Il timestamp attuale.
  */
 Objectis.getTimestamp = function() {
     Objectis.trackCall("getTimestamp");
-    var var_n_now = new Date().getTime();
-    return var_n_now;
+    
+    var var_n_time = new Date().getTime();
+    return var_n_time;
 };
 
 /**

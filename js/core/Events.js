@@ -34,24 +34,23 @@ Objectis.setEvents = function() {
 
 /**
  * @function addEvent
- * @description Helper per aggiungere eventi ad elementi specifici (Cross-browser).
- * @param {Object} O_EL - Elemento DOM.
- * @param {String} S_EVT - Nome evento (es. 'click').
- * @param {Function} FN_CALLBACK - Funzione da eseguire.
+ * @description Gestore cross-browser per gli eventi (IE6+).
  */
-Objectis.addEvent = function(O_EL, S_EVT, FN_CALLBACK) {
+Objectis.addEvent = function(O_EL, S_EV, F_FUNC) {
     Objectis.trackCall("addEvent");
+    
+    if (!O_EL) return;
 
-    if (!Objectis.isObject(O_EL) || !Objectis.isFunction(FN_CALLBACK)) {
-        Objectis.logError("addEvent: Parametri non validi.");
-        return;
-    }
-
-    if (O_EL.attachEvent) {
-        // Metodo per IE6-8
-        O_EL.attachEvent("on" + S_EVT, FN_CALLBACK);
-    } else if (O_EL.addEventListener) {
-        // Metodo standard
-        O_EL.addEventListener(S_EVT, FN_CALLBACK, false);
+    if (O_EL.addEventListener) {
+        // Chrome, Firefox, Safari, IE9+
+        O_EL.addEventListener(S_EV, F_FUNC, false);
+    } else if (O_EL.attachEvent) {
+        // IE6, IE7, IE8
+        var var_o_handler = function() {
+            return F_FUNC.call(O_EL, window.event);
+        };
+        O_EL.attachEvent("on" + S_EV, var_o_handler);
+    } else {
+        O_EL["on" + S_EV] = F_FUNC;
     }
 };

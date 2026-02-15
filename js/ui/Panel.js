@@ -11,41 +11,31 @@
  */
 Objectis.Panel = function(O_EL) {
     Objectis.trackCall("Panel.constructor");
+    this.var_o_element = O_EL;
 
-    if (!Objectis.isObject(O_EL)) return;
+    // Carichiamo il CSS dedicato
+    Objectis.loadStyle("js/ui/Panel.css");
 
-    // 1. Setup Struttura
-    var var_s_title = O_EL.getAttribute("title") || "Panel";
-    var var_s_content = O_EL.innerHTML;
-    
-    // Pulizia e ricostruzione per controllo totale del layout
-    O_EL.innerHTML = "";
-    
-    // Creazione Header
-    var var_o_header = document.createElement("div");
-    var_o_header.innerHTML = var_s_title;
-    
-    // Creazione Body
-    var var_o_body = document.createElement("div");
-    var_o_body.innerHTML = var_s_content;
+    if (const_B_DEBUG) {
+        Objectis.logError("Panel #" + this.var_o_element.id + " formattato via CSS.");
+    }
+};
 
-    // 2. Iniezione Stili (Punto 14)
-    O_EL.style.border = "1px solid #999";
-    O_EL.style.marginBottom = "10px";
+Objectis.loadStyle = function(S_PATH) {
+    Objectis.trackCall("loadStyle");
     
-    var_o_header.style.backgroundColor = "#333";
-    var_o_header.style.color = "#fff";
-    var_o_header.style.padding = "4px 8px";
-    var_o_header.style.fontWeight = "bold";
+    // Assicuriamoci che il percorso inizi correttamente
+    var var_s_fullPath = S_PATH;
+    var var_s_id = "css-" + S_PATH.replace(/\//g, "-").replace(/\./g, "-");
     
-    var_o_body.style.padding = "10px";
-    var_o_body.style.backgroundColor = "#fff";
+    if (document.getElementById(var_s_id)) return;
 
-    // 3. Applicazione BoxModel (Punto 13)
-    // Usiamo la nostra utility per assicurarci che il panel occupi lo spazio corretto
-    Objectis.setSafeWidth(O_EL, Objectis.getRealWidth(O_EL));
+    var var_o_link = document.createElement("link");
+    var_o_link.id = var_s_id;
+    var_o_link.rel = "stylesheet";
+    var_o_link.type = "text/css";
+    var_o_link.href = var_s_fullPath;
 
-    // Componiamo il DOM
-    O_EL.appendChild(var_o_header);
-    O_EL.appendChild(var_o_body);
+    document.getElementsByTagName("head")[0].appendChild(var_o_link);
+    Objectis.logError("Caricamento stile: " + var_s_fullPath);
 };

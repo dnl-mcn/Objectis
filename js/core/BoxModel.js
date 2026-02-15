@@ -1,31 +1,35 @@
 /**
  * @file BoxModel.js
- * @description Normalizzazione delle geometrie e calcolo ingombri (IE6 Strict Mode).
- * @version 0.0.8
+ * @description Gestore delle dimensioni e del posizionamento degli elementi.
+ * @version 0.1.0
  */
 
 /**
  * @function getRealWidth
- * @description Calcola la larghezza effettiva di un elemento inclusi padding e bordi.
- * @param {Object} O_EL - L'elemento DOM da misurare.
- * @return {Number} var_n_width - Larghezza totale in pixel.
+ * @description Calcola la larghezza reale dell'elemento (offsetWidth).
+ * @param {Object} O_EL - Elemento DOM.
+ * @return {Number} var_n_width
  */
 Objectis.getRealWidth = function(O_EL) {
     Objectis.trackCall("getRealWidth");
-
-    if (!Objectis.isObject(O_EL)) {
-        Objectis.logError("getRealWidth: O_EL non è un oggetto valido.");
-        return 0;
-    }
-
-    // offsetWidth include padding e border in IE6
-    var var_n_width = O_EL.offsetWidth;
+    if (!O_EL) return 0;
     
-    if (const_B_DEBUG) {
-        window.status = "Geometry: Element width is " + var_n_width;
-    }
-
+    var var_n_width = O_EL.offsetWidth;
     return var_n_width;
+};
+
+/**
+ * @function getRealHeight
+ * @description Calcola l'altezza reale dell'elemento (offsetHeight).
+ * @param {Object} O_EL - Elemento DOM.
+ * @return {Number} var_n_height
+ */
+Objectis.getRealHeight = function(O_EL) {
+    Objectis.trackCall("getRealHeight");
+    if (!O_EL) return 0;
+    
+    var var_n_height = O_EL.offsetHeight;
+    return var_n_height;
 };
 
 /**
