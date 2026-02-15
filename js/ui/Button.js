@@ -8,20 +8,23 @@ Objectis.Button = function(O_EL) {
     Objectis.trackCall("Button.constructor");
     this.var_o_element = O_EL;
     
-    // Carichiamo il CSS dedicato (Punto 15 Roadmap)
     Objectis.loadStyle("js/ui/Button.css");
 
+    // Leggiamo i parametri dall'HTML
+    var var_s_bgColor = Objectis.getParam(this.var_o_element, "obj-color", "");
+    var var_s_label = Objectis.getParam(this.var_o_element, "obj-label", "");
+
+    if (var_s_bgColor !== "") {
+        this.var_o_element.style.backgroundColor = var_s_bgColor;
+    }
+    if (var_s_label !== "") {
+        this.var_o_element.innerHTML = var_s_label;
+    }
+
     var var_o_self = this;
-    
-    // Binding dell'evento click
     Objectis.addEvent(this.var_o_element, "click", function() {
-        Objectis.logError("Click intercettato su " + var_o_self.var_o_element.id);
         var_o_self.onClick();
     });
-
-    if (const_B_DEBUG) {
-        Objectis.logError("OK: Button #" + this.var_o_element.id + " istanziato.");
-    }
 };
 
 Objectis.Button.prototype.onClick = function() {

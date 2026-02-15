@@ -23,3 +23,17 @@ Objectis.setStyle = function(O_EL, O_STYLES) {
         }
     }
 };
+
+/**
+ * @function getParam
+ * @description Legge un attributo dall'elemento e restituisce un default se manca.
+ * @param {Object} O_EL - Elemento DOM.
+ * @param {String} S_NAME - Nome dell'attributo.
+ * @param {String} S_DEFAULT - Valore di ritorno se l'attributo non esiste.
+ * @return {String} var_s_value
+ */
+Objectis.getParam = function(O_EL, S_NAME, S_DEFAULT) {
+    Objectis.trackCall("getParam");
+    var var_s_value = O_EL.getAttribute(S_NAME);
+    return (var_s_value !== null && var_s_value !== "") ? var_s_value : S_DEFAULT;
+};
