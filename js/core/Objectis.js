@@ -62,4 +62,26 @@ Objectis.activateComponent = function(O_EL, S_COMP_NAME, S_PATH) {
     }
 };
 
+Objectis.setEvents = function() {
+    Objectis.trackCall("setEvents");
+
+    var var_o_btn = document.getElementById("btn-1");
+    if (var_o_btn) {
+        var_o_btn.onComponentClick = function(O_DATA) {
+            Objectis.logError("Controller: Ricevuto click da " + O_DATA.id);
+            
+            var var_o_pnl2 = document.getElementById("pnl-2");
+            if (var_o_pnl2) {
+                // Usiamo setStyle per coerenza con il framework
+                Objectis.setStyle(var_o_pnl2, {
+                    "display": "none",
+                    "height": "0px",
+                    "overflow": "hidden"
+                });
+                Objectis.logError("Azione: Pannello 2 rimosso via setStyle.");
+            }
+        };
+    }
+};
+
 Objectis.waitForCoreAndInit();
