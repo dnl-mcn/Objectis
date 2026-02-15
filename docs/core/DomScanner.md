@@ -1,25 +1,32 @@
-# Objectis DomScanner (v0.0.7)
+# Objectis DomScanner (v0.1.2)
 
-Il `DomScanner` è il motore di attivazione automatica della libreria. Permette di trasformare elementi statici in componenti dinamici senza scrivere codice aggiuntivo nell'HTML.
+Il `DomScanner` è il motore di attivazione automatica della libreria. Il suo compito è trasformare elementi statici definiti nell'HTML in componenti dinamici interattivi, senza la necessità di scrivere codice JavaScript "inline".
+
+## Descrizione Funzionale
+
+Il modulo scansiona il Document Object Model alla ricerca di tag `<div>` che possiedono classi CSS specifiche con prefisso `obj-`. Una volta identificato un elemento, lo scanner agisce come una **Factory**, invocando il costruttore del componente UI corrispondente.
 
 ## Metodi Disponibili
 
 ### Objectis.scanDocument(O_ROOT)
 
-Esegue una scansione ricorsiva di tutti i tag `<div>`. Se un elemento possiede una classe con prefisso `obj-`, viene preparato per l'inizializzazione.
+Esegue una scansione ricorsiva degli elementi partendo dalla radice specificata.
 
-- **Parametri:** `O_ROOT` (Object, opzionale). Se omesso, scansiona l'intero `document`.
-- **Performance:** In IE6 la scansione è ottimizzata per minimizzare il reflow.
+- **Parametri:** `O_ROOT` (Object, opzionale). Se omesso, la scansione parte da `document`.
+- **Esecuzione:** Viene solitamente invocata una sola volta dal modulo `Objectis.js` al termine del caricamento della pagina (`window.onload`).
 
-## Convenzione Naming Classi
+## Mappatura Componenti (Registry)
 
-Per essere rilevato, un elemento deve seguire questo standard:
-`<div class="obj-button"></div>`
-`<div class="obj-slider"></div>`
+Attualmente lo scanner riconosce e istanzia i seguenti componenti:
 
-## Esempio d'uso
+| Classe CSS   | Costruttore Invocato    | Modulo Richiesto  |
+| :----------- | :---------------------- | :---------------- |
+| `obj-button` | `Objectis.Button(O_EL)` | `js/ui/Button.js` |
 
-```javascript
-// Da invocare al window.onload
-Objectis.scanDocument();
+## Convenzione Naming
+
+Per essere correttamente rilevato e attivato, un elemento deve seguire questo standard:
+
+```html
+<div class="obj-button" id="my-action-btn">Clicca Qui</div>
 ```
