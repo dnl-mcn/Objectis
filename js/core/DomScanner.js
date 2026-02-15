@@ -24,6 +24,10 @@ Objectis.scanDocument = function(O_ROOT) {
                 window.status = "Scanner: Activated Button on " + var_o_current.id;
             }
         }
+
+        if (var_s_className.indexOf("obj-panel") !== -1) {
+            new Objectis.Panel(var_o_current);
+        }
         
         // Qui aggiungeremo gli altri componenti (obj-slider, obj-panel, ecc.)
     }
