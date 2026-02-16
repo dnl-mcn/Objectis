@@ -135,6 +135,24 @@ Objectis.setEvents = function() {
         };
     }
 
+    var var_o_btnTest = document.getElementById("btn-ajax-test");
+    
+    if (var_o_btnTest) {
+        var_o_btnTest.onComponentClick = function() {
+            Objectis.logError("Test: Avvio richiesta AJAX...");
+            this.innerHTML = "CONNETTENDO...";
+            
+            // Chiamata al nostro nuovo metodo integrato
+            // Scarica da 'api/test.json' e aggiorna 'click_count'
+            Objectis.ajaxToStorage("test/data.json", "click_count");
+            
+            var var_o_self = this;
+            setTimeout(function() {
+                var_o_self.innerHTML = "SINCRONIZZATO";
+            }, 1000);
+        };
+    }
+
     var var_o_debugLog = document.getElementById("obj-debug-log");
     if (var_o_debugLog) {
         var_o_debugLog.innerHTML += "<div style='margin-top:10px; border-top:1px solid #555; padding-top:5px;'>" + 
