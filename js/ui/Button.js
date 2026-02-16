@@ -29,5 +29,21 @@ Objectis.Button = function(O_EL) {
 
 Objectis.Button.prototype.onClick = function() {
     Objectis.trackCall("Button.onClick");
-    this.var_o_element.innerHTML = "ATTIVATO (" + this.var_o_element.id + ")";
+    this.var_o_element.innerHTML = "ELABORAZIONE...";
+    
+    // Notifichiamo al mondo che il bottone è stato premuto
+    Objectis.fireEvent(this.var_o_element, "ComponentClick", {
+        id: this.var_o_element.id,
+        timestamp: Objectis.getTimestamp()
+    });
+};
+
+/**
+ * @function reset
+ * @description Ripristina lo stato del bottone.
+ */
+Objectis.Button.prototype.reset = function(S_LABEL) {
+    Objectis.trackCall("Button.reset");
+    var var_s_default = Objectis.getParam(this.var_o_element, "obj-label", "Invia");
+    this.var_o_element.innerHTML = S_LABEL || var_s_default;
 };

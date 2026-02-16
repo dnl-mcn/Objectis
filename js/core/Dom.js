@@ -32,3 +32,19 @@ Objectis.getParam = function(O_EL, S_NAME, S_DEFAULT) {
     var var_s_value = O_EL.getAttribute(S_NAME);
     return (var_s_value !== null && var_s_value !== "") ? var_s_value : S_DEFAULT;
 };
+
+/**
+ * @function setContent
+ * @description Aggiorna il testo o l'HTML di un elemento.
+ */
+Objectis.setContent = function(O_EL, var_s_value) {
+    Objectis.trackCall("setContent");
+    if (!O_EL) return;
+    
+    // Gestione compatibile: se è un input usa value, altrimenti innerHTML
+    if (O_EL.tagName === "INPUT" || O_EL.tagName === "TEXTAREA") {
+        O_EL.value = var_s_value;
+    } else {
+        O_EL.innerHTML = var_s_value;
+    }
+};

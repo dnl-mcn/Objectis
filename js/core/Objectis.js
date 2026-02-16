@@ -62,23 +62,41 @@ Objectis.activateComponent = function(O_EL, S_COMP_NAME, S_PATH) {
     }
 };
 
+// Store dei dati (Model)
+Objectis.var_o_data = {
+    var_s_user: "Ospite",
+    var_n_clicks: 0
+};
+
 Objectis.setEvents = function() {
     Objectis.trackCall("setEvents");
 
-    var var_o_btn = document.getElementById("btn-1");
-    if (var_o_btn) {
-        var_o_btn.onComponentClick = function(O_DATA) {
-            Objectis.logError("Controller: Ricevuto click da " + O_DATA.id);
-            
-            var var_o_pnl2 = document.getElementById("pnl-2");
-            if (var_o_pnl2) {
-                // Usiamo setStyle per coerenza con il framework
-                Objectis.setStyle(var_o_pnl2, {
-                    "display": "none",
-                    "height": "0px",
-                    "overflow": "hidden"
-                });
-                Objectis.logError("Azione: Pannello 2 rimosso via setStyle.");
+    var var_o_btn1 = document.getElementById("btn-1");
+    if (var_o_btn1) {
+        var_o_btn1.onComponentClick = function(O_DATA) {
+            try {
+                // 1. Logica Dati
+                Objectis.var_o_data.var_n_clicks++;
+                
+                // 2. Aggiornamento Pannello (Data Binding)
+                var var_o_pnl1 = document.getElementById("pnl-1");
+                if (var_o_pnl1) {
+                    var var_s_msg = "Click totali: " + Objectis.var_o_data.var_n_clicks;
+                    Objectis.setContent(var_o_pnl1.getElementsByTagName("p")[0], var_s_msg);
+                }
+
+                // 3. Reset del bottone tramite l'istanza dell'oggetto
+                // Recuperiamo l'istanza dal registro (o la gestiamo via ID)
+                this.innerHTML = "OPERAZIONE OK";
+                
+                // Delay minimo per mostrare il successo prima del reset
+                setTimeout(function() {
+                    var_o_btn1.innerHTML = Objectis.getParam(var_o_btn1, "obj-label", "Invia");
+                }, 1000);
+
+            } catch (var_o_err) {
+                Objectis.logError("Errore nel controller: " + var_o_err.message);
+                var_o_btn1.innerHTML = "ERRORE";
             }
         };
     }

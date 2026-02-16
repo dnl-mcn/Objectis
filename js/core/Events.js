@@ -54,3 +54,18 @@ Objectis.addEvent = function(O_EL, S_EV, F_FUNC) {
         O_EL["on" + S_EV] = F_FUNC;
     }
 };
+
+/**
+ * @function fireEvent
+ * @description Scatena un evento custom su un elemento o globalmente.
+ */
+Objectis.fireEvent = function(O_EL, S_EVENT_NAME, O_DATA) {
+    Objectis.trackCall("fireEvent");
+    if (const_B_DEBUG) {
+        Objectis.logError("Evento scatenato: " + S_EVENT_NAME + " su " + (O_EL.id || "global"));
+    }
+    // Per ora usiamo un sistema di callback semplice compatibile con IE6
+    if (O_EL["on" + S_EVENT_NAME]) {
+        O_EL["on" + S_EVENT_NAME](O_DATA);
+    }
+};
