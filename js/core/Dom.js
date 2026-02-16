@@ -48,3 +48,15 @@ Objectis.setContent = function(O_EL, var_s_value) {
         O_EL.innerHTML = var_s_value;
     }
 };
+
+/**
+ * @function syncElement
+ * @description Sincronizza un elemento con un valore del registro.
+ */
+Objectis.syncElement = function(O_EL, S_KEY) {
+    Objectis.trackCall("syncElement");
+    var var_s_val = Objectis.getPseudoCookie(S_KEY, "");
+    if (var_s_val !== "") {
+        Objectis.setContent(O_EL, var_s_val);
+    }
+};

@@ -52,3 +52,14 @@ Objectis.activateComponent = function(O_EL, S_COMP_NAME, S_PATH) {
         }, 500); // Aumentiamo a 500ms per vedere il log rallentato
     }
 };
+
+// Aggiunta all'interno della logica di scansione
+Objectis.bindAll = function() {
+    Objectis.trackCall("bindAll");
+    var var_a_binds = Objectis.getElementsByClassName("obj-bind");
+    for (var var_n_i = 0; var_n_i < var_a_binds.length; var_n_i++) {
+        var var_o_el = var_a_binds[var_n_i];
+        var var_s_key = var_o_el.getAttribute("obj-key"); // Parametro custom
+        Objectis.syncElement(var_o_el, var_s_key);
+    }
+};

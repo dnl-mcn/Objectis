@@ -47,6 +47,9 @@ Objectis.setPseudoCookie = function(S_NAME, S_VALUE) {
         var_o_param.value = S_VALUE;
         var_o_registry.appendChild(var_o_param);
     }
+
+    // Dopo il salvataggio, notifica il cambiamento (Reattività)
+    Objectis.bindAll(); 
 };
 
 /**
