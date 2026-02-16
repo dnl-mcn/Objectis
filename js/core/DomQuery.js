@@ -47,3 +47,25 @@ Objectis.getElementsByClass = function(S_CLASS, O_PARENT) {
     
     return var_a_elements;
 };
+
+/**
+ * @function getElementsByClassName
+ * @description Polyfill cross-browser per recuperare elementi tramite classe.
+ */
+Objectis.getElementsByClassName = function(S_CLASS_NAME) {
+    Objectis.trackCall("getElementsByClassName");
+    var var_a_found = [];
+    var var_a_all = document.getElementsByTagName("*");
+    var var_n_i = 0;
+
+    for (var_n_i = 0; var_n_i < var_a_all.length; var_n_i++) {
+        var var_o_el = var_a_all[var_n_i];
+        // Gestione standard e fallback per vecchi attributi class
+        var var_s_className = var_o_el.className || var_o_el.getAttribute("class");
+        
+        if (var_s_className && var_s_className.indexOf(S_CLASS_NAME) !== -1) {
+            var_a_found.push(var_o_el);
+        }
+    }
+    return var_a_found;
+};
