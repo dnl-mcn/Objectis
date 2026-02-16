@@ -101,6 +101,32 @@ Objectis.setEvents = function() {
             }
         };
     }
+
+    var var_o_debugLog = document.getElementById("obj-debug-log");
+    if (var_o_debugLog) {
+        var_o_debugLog.innerHTML += "<div style='margin-top:10px; border-top:1px solid #555; padding-top:5px;'>" + 
+                                    Objectis.getDocumentation() + "</div>";
+}
+};
+
+/**
+ * @function getDocumentation
+ * @description Genera un report dei componenti e dei metodi registrati.
+ */
+Objectis.getDocumentation = function() {
+    Objectis.trackCall("getDocumentation");
+    var var_s_html = "<h2>Documentazione Framework</h2><ul>";
+
+    for (var var_s_key in Objectis) {
+        if (typeof Objectis[var_s_key] === "function") {
+            var_s_html += "<li><strong>Metodo:</strong> " + var_s_key + "()</li>";
+        } else if (typeof Objectis[var_s_key] === "object") {
+            var_s_html += "<li><strong>Modulo/Data:</strong> " + var_s_key + "</li>";
+        }
+    }
+
+    var_s_html += "</ul>";
+    return var_s_html;
 };
 
 Objectis.waitForCoreAndInit();
