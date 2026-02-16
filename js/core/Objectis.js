@@ -71,32 +71,33 @@ Objectis.var_o_data = {
 Objectis.setEvents = function() {
     Objectis.trackCall("setEvents");
 
+    // Controllo esistenza metodo per evitare TypeError
+    if (typeof Objectis.getPseudoCookie !== "function") {
+        Objectis.logError("Warning: Storage.js non ancora caricato. Rinvio setEvents.");
+        setTimeout(Objectis.setEvents, 50);
+        return;
+    }
+
+    var var_o_pnl1 = document.getElementById("pnl-1");
+    // Recupero iniziale dal registro DOM
+    var var_n_saved = parseInt(Objectis.getPseudoCookie("click_count", "0"), 10);
+    
     var var_o_btn1 = document.getElementById("btn-1");
+
+    var var_n_saved = parseInt(Objectis.getPseudoCookie("click_count", "0"), 10);
+    Objectis.var_o_data.var_n_clicks = var_n_saved;
+
     if (var_o_btn1) {
-        var_o_btn1.onComponentClick = function(O_DATA) {
-            try {
-                // 1. Logica Dati
-                Objectis.var_o_data.var_n_clicks++;
-                
-                // 2. Aggiornamento Pannello (Data Binding)
-                var var_o_pnl1 = document.getElementById("pnl-1");
-                if (var_o_pnl1) {
-                    var var_s_msg = "Click totali: " + Objectis.var_o_data.var_n_clicks;
-                    Objectis.setContent(var_o_pnl1.getElementsByTagName("p")[0], var_s_msg);
-                }
-
-                // 3. Reset del bottone tramite l'istanza dell'oggetto
-                // Recuperiamo l'istanza dal registro (o la gestiamo via ID)
-                this.innerHTML = "OPERAZIONE OK";
-                
-                // Delay minimo per mostrare il successo prima del reset
-                setTimeout(function() {
-                    var_o_btn1.innerHTML = Objectis.getParam(var_o_btn1, "obj-label", "Invia");
-                }, 1000);
-
-            } catch (var_o_err) {
-                Objectis.logError("Errore nel controller: " + var_o_err.message);
-                var_o_btn1.innerHTML = "ERRORE";
+        var_o_btn1.onComponentClick = function() {
+            Objectis.var_o_data.var_n_clicks++;
+            
+            // Salvataggio nello Pseudo-Cookie via JS
+            Objectis.setPseudoCookie("click_count", Objectis.var_o_data.var_n_clicks);
+            
+            // Update UI
+            if (var_o_pnl1) {
+                Objectis.setContent(var_o_pnl1.getElementsByTagName("p")[0], 
+                    "Dati registrati nel DOM: " + Objectis.var_o_data.var_n_clicks);
             }
         };
     }
