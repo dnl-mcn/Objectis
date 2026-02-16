@@ -109,13 +109,19 @@ Objectis.boot = function() {
     Objectis.loadModule("core/DomQuery.js", ["core/TypeCheck.js"]);
     Objectis.loadModule("core/Events.js");
     
+
+    
     // Aggiungiamo Storage come dipendenza
     Objectis.loadModule("core/Storage.js");
     
     // Lo Scanner ora dipende anche dal BoxModel per i componenti UI
     Objectis.loadModule("core/DomScanner.js", ["core/Dom.js", "core/BoxModel.js"]);
     
-    Objectis.loadModule("core/Objectis.js", ["core/TimeEngine.js", "core/Events.js", "core/DomScanner.js"]);
+    Objectis.loadModule("core/Ajax.js");
+
+    Objectis.loadModule("core/Objectis.js", [
+        "core/Storage.js",
+        "core/Ajax.js","core/TimeEngine.js", "core/Events.js", "core/DomScanner.js"]);
 };
 
 /**

@@ -102,6 +102,39 @@ Objectis.setEvents = function() {
         };
     }
 
+    Objectis.trackCall("setEvents");
+
+    var var_o_btnUpdate = document.getElementById("btn-sync");
+    if (var_o_btnUpdate) {
+        var_o_btnUpdate.onComponentClick = function() {
+            // Scarica i dati e aggiorna automaticamente tutti gli obj-bind="click_count"
+            Objectis.ajaxToStorage("api/data.json", "click_count");
+        };
+    }
+
+    var var_o_btnAjax = document.getElementById("btn-ajax");
+    
+    if (var_o_btnAjax) {
+        var_o_btnAjax.onComponentClick = function() {
+            this.innerHTML = "CARICAMENTO...";
+            
+            Objectis.ajax({
+                url: "api/stats.json",
+                success: function(var_o_res) {
+                    // Aggiorniamo lo Pseudo-Cookie con il dato dal server
+                    // Questo scatenerà automaticamente bindAll()
+                    Objectis.setPseudoCookie("click_count", var_o_res.count);
+                    
+                    var_o_btnAjax.innerHTML = "DATI SINCRONIZZATI";
+                },
+                error: function(var_n_status) {
+                    Objectis.logError("Errore AJAX: " + var_n_status);
+                    var_o_btnAjax.innerHTML = "ERRORE SERVER";
+                }
+            });
+        };
+    }
+
     var var_o_debugLog = document.getElementById("obj-debug-log");
     if (var_o_debugLog) {
         var_o_debugLog.innerHTML += "<div style='margin-top:10px; border-top:1px solid #555; padding-top:5px;'>" + 

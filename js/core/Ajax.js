@@ -61,3 +61,29 @@ Objectis.ajaxLoad = function(S_URL, FN_CALLBACK) {
     var_o_xhr.open("GET", S_URL, true);
     var_o_xhr.send(null);
 };
+
+/**
+ * @function ajaxToStorage
+ * @description Carica dati da un URL e li mappa direttamente nello Pseudo-Cookie.
+ * @param {String} S_URL - URL della risorsa JSON.
+ * @param {String} S_STORAGE_KEY - Chiave dello Pseudo-Cookie da aggiornare.
+ */
+Objectis.ajaxToStorage = function(S_URL, S_STORAGE_KEY) {
+    Objectis.trackCall("ajaxToStorage");
+    
+    Objectis.ajaxLoad(S_URL, function(var_s_response) {
+        var var_o_data;
+        try {
+            // Tentativo di parsing JSON (Richiede JSON polyfill su IE6)
+            var_o_data = JSON.parse(var_s_response);
+            // Se il JSON è un oggetto, cerchiamo un valore specifico, altrimenti usiamo tutto
+            var var_s_value = (typeof var_o_data === "object") ? var_o_data[S_STORAGE_KEY] : var_s_response;
+            
+            Objectis.setPseudoCookie(S_STORAGE_KEY, var_s_value);
+            Objectis.logError("Ajax: Storage aggiornato per " + S_STORAGE_KEY);
+        } catch (e) {
+            // Se non è JSON, salviamo la stringa grezza
+            Objectis.setPseudoCookie(S_STORAGE_KEY, var_s_response);
+        }
+    });
+};
