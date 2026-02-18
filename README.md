@@ -1,89 +1,40 @@
-# Objectis Framework v1.0.0
+# Objectis Framework v1.4.8
 
-## Objectis è un framework JavaScript legacy-first progettato per fornire un'interfaccia utente coerente, robusta e orientata agli oggetti. È costruito per antire la compatibilità totale a partire da Internet Explorer 6 su standard HTML 4.01 Strict.
+**Legacy Browser UI Engine**
 
-## 1. Architettura e Filosofia
+[FRAMEWORK_LOGIC_START]
+Objectis è un engine UI cross-browser focalizzato sulla compatibilità legacy (IE6+).
+Il cuore del sistema è un processo a due fasi: **Bootstrapping Core** e **Dynamic UI Discovery**.
 
-La libreria trasforma elementi strutturali neutri (div) in componenti interattivi complessi, eliminando l'uso di tag form nativi e script inline. Il core tisce automaticamente il ciclo di vita dei moduli, le dipendenze e l'inizializzazione tramite scansione di classi CSS specifiche.
+### Flusso Logico
 
-### Principi Cardine:
+1. **Core Initialization**: Caricamento asincrono di `Dom.js`, `DomScanner.js` e `Ajax.js`.
+2. **Scanner Execution**: Identificazione automatica di elementi `obj-*` nel DOM.
+3. **Module Injection**: Caricamento on-demand dei file in `js/ui/` basato sulle classi trovate.
+4. **Binding & Init**: Creazione delle istanze e attivazione degli eventi definiti in `setevents`.
+   [FRAMEWORK_LOGIC_END]
 
-- Zero Tag Standard: Vietato l'uso di input, select, button, form, label e textarea.
-- Metadata via Classi: Ogni parametro (chiavi di binding, label, regole di validazione) è veicolato tramite classi CSS (es. cls-key-nome).
-- Niente Cookie Standard: La persistenza è affidata a uno "Pseudo-Cookie" (elemento <object>) per evitare direttive sui cookie e gestire i dati nel DOM.
-- Unobtrusive JS: JavaScript presente solo in file esterni. L'unico richiamo ammesso è il bootloader nell'header.
+[COMPONENT_SPEC_START]
 
----
+### Componenti e Caratteristiche
 
-## 2. Standard di Naming e Tipizzazione (Rigoroso)
+- **Button**: Supporto cross-browser per eventi mouse e gestione label.
+- **Panel**: Struttura modulare con supporto `HasLayout`.
+- **Slider (v1.2.5)**:
+  - Orientamento dinamico (H/V).
+  - Calcolo preciso del posizionamento tramite `getRect`.
+  - Connessione autonoma: lo slider riconosce il target di scroll (es. `#system-log-container`) e si auto-sincronizza.
+    [COMPONENT_SPEC_END]
 
-Il framework segue una convenzione di stile derivata dai sistemi embedded e dal linguaggio C per garantire zero ambiguità.
+[GIT_STORY_START]
 
-### Convenzioni Generali
+### Changelog Recente
 
-| Elemento           | Convenzione           | Esempio              |
-| :----------------- | :-------------------- | :------------------- |
-| Classi (Prototype) | PascalCase            | Objectis.CustomInput |
-| Funzioni / Metodi  | camelCase             | Objectis.setEvents   |
-| Parametri Funzione | TUTTO_MAIUSCOLO       | (O_EL, N_VAL)        |
-| Variabili Locali   | var\_ + tipo + nome   | var_n_index          |
-| Costanti           | const\_ + TIPO + NOME | const_N_MAX_LIMIT    |
-
-### Prefissi di Tipo (Obbligatori)
-
-- s* / S* : Stringa
-- n* / N* : Numero
-- b* / B* : Booleano
-- o* / O* : Oggetto / Elemento DOM
-- a* / A* : Array
-- fn* / FN* : Funzione
+- **Rollback & Stability**: Ripristinata stabilità dopo i test di orientamento orizzontale.
+- **Precision Fix**: Corretto l'offset del cursore eliminando interferenze CSS.
+- **Timing Logic**: Introdotta `requestFrame` nel Core per stabilizzare l'inizializzazione asincrona dei componenti.
+  [GIT_STORY_END]
 
 ---
 
-## 3. Roadmap di Sviluppo e Moduli Core
-
-1.  Namespace & Global Scope: Incapsulamento totale sotto Objectis.
-2.  Error Catching (HTML Log): Intercettazione errori e stampa in console custom.
-3.  Usage Stats: Conteggio chiamate tramite Objectis.trackCall(S_NAME).
-4.  Pseudo-Cookie (Storage): Gestione dello stato dell'applicazione senza cookie HTTP.
-5.  DomScanner: Attivazione automatica dei componenti tramite prefisso obj-.
-6.  Events Manager: Gestione centralizzata in setEvents e dispacciamento tramite fireEvent.
-7.  Async (Ajax): Chiamate XHR cross-browser con gestione errore HTTP 0.
-8.  Validation: Motore di validazione dichiarativo basato su classi (cls-val-numeric).
-
----
-
-## 4. Implementazione UI (Esempi)
-
-### Componente Input (Simulato)
-
-Un div con contentEditable che funge da campo di testo numerico:
-html %% <div class="obj-custom-input cls-key-prezzo cls-val-numeric">0</div> %%
-
-### Componente Button
-
-Un bottone con label dinamica e gestione eventi:
-html %% <div id="btn-save" class="obj-button cls-label-Salva_Dati"></div> %%
-
-### Data Binding
-
-Ogni elemento con classe obj-bind si aggiorna automaticamente al variare del valore nel registro:
-html %% <div class="obj-bind cls-key-prezzo">Valore: 0</div> %%
-
----
-
-## 5. Requisiti e Vincoli Tecnici
-
-- Documentazione: Ogni metodo deve essere preceduto da header @function, @description, @param e @return.
-- Anti-Leak: I riferimenti agli oggetti DOM devono essere annullati (null) alla distruzione dei moduli per prevenire memory leak in JScript (IE6).
-- Strict Mode: Il markup deve validare come HTML 4.01 Strict.
-
----
-
-## 6. Manutenzione Git
-
-Per ogni modifica strutturale o aggiunta di modulo, è obbligatorio seguire il flusso:
-
-1. git add [file]
-2. git commit -m "[tipo]: [descrizione]"
-3. git push
+_Status: Stable - Version 1.4.8_
