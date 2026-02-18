@@ -1,6 +1,6 @@
 /**
  * @file panel.css
- * @description Layout relativo consolidato.
+ * @description Layout per Objectis Framework con supporto scrollbar console.
  */
 
  html, body {
@@ -11,6 +11,7 @@
     overflow: hidden;
     background-color: #1a1a1a;
     color: #eee;
+    font-family: Tahoma, Verdana, sans-serif;
 }
 
 #main-viewport {
@@ -26,7 +27,6 @@
     background: #2a2a2a;
     border: 1px solid #444;
     display: block;
-    clear: both;
     zoom: 1;
 }
 
@@ -35,12 +35,39 @@
     padding: 10px;
     border-bottom: 1px solid #444;
     font-weight: bold;
-    text-transform: uppercase;
-    font-size: 10px;
+    font-size: 11px;
 }
 
 .panel-content {
     position: relative;
     padding: 10px;
-    /* Rimuoviamo overflow:hidden qui per permettere ai bottoni di respirare */
+}
+
+.console-wrapper {
+    position: relative;
+    background: #000;
+    border: 1px solid #444;
+    height: 200px;
+    overflow: hidden;
+}
+
+#system-log-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 20px;
+    bottom: 0;
+    overflow: hidden;
+    color: #0f0;
+    font-family: monospace;
+    font-size: 11px;
+    padding: 5px;
+}
+
+.console-scrollbar {
+    position: absolute;
+    right: 4px;
+    top: 4px;
+    bottom: 4px;
+    width: 12px;
 }

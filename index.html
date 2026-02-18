@@ -1,31 +1,30 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-    <title>Objectis Framework - Fix 404</title>
+    <title>Objectis Framework - Console Slider Restore</title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
     <link rel="stylesheet" type="text/css" href="css/button.css">
     <link rel="stylesheet" type="text/css" href="css/panel.css">
+    <link rel="stylesheet" type="text/css" href="css/slider.css">
 </head>
 <body>
 
     <div id="main-viewport">
         
-        <div class="obj-panel opt-title-Modulo_Cifratura">
+        <div class="obj-panel opt-title-Controlli">
             <div class="panel-content">
-                <p>Data Vault dinamico pronto.</p>
-                <div id="btn-save-custom" class="obj-button opt-label-Cifra_Locale"></div>
-            </div>
-        </div>
-
-        <div class="obj-panel opt-title-Modulo_Sincronizzazione">
-            <div class="panel-content">
-                <div id="btn-ajax-test" class="obj-button opt-label-Sincronizza_Server"></div>
+                <div id="btn-test-log" class="obj-button opt-label-Genera_Log"></div>
+                <p>Usa il tasto per testare lo slider verticale della console.</p>
             </div>
         </div>
 
         <div class="obj-panel opt-title-Console_Log">
             <div class="panel-content">
-                <div id="system-log-container" style="height: 200px; background: #000; color: #0f0; overflow: hidden;">
+                <div class="console-wrapper">
+                    <div id="system-log-container"></div>
+                    <div class="console-scrollbar">
+                        <div id="console-slider" class="obj-slider opt-min-0 opt-max-0 opt-dir-v opt-val-0"></div>
+                    </div>
                 </div>
             </div>
         </div>

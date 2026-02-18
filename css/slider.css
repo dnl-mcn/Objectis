@@ -1,0 +1,31 @@
+/**
+ * @file slider.css
+ * @description Stile slider verticale reattivo.
+ */
+
+ .obj-slider {
+    position: relative;
+    background: #333;
+    border: 1px solid #555;
+    border-radius: 4px;
+    cursor: pointer;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+}
+
+.obj-slider-vertical {
+    width: 12px;
+}
+
+.obj-slider .cursor {
+    position: absolute;
+    background: #0078d7;
+    border: 1px solid #eee;
+    width: 14px;
+    height: 14px;
+    left: -2px;
+    top: 0;
+    border-radius: 3px;
+    z-index: 10;
+}
