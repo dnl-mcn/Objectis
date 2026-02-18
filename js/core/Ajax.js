@@ -1,89 +1,66 @@
 /**
  * @file Ajax.js
- * @description Gestore per le richieste asincrone (Cross-browser ActiveX/XHR).
- * @version 0.0.10
+ * @description Modulo per comunicazioni asincrone conforme HTML 4.01 (ActiveX/XHR).
+ * @version 1.1.2
  */
 
-/**
- * @function getXhr
- * @description Crea l'oggetto per la richiesta asincrona in base al browser.
- * @return {Object} var_o_xhr - L'oggetto XHR o ActiveX.
- */
-Objectis.getXhr = function() {
-    Objectis.trackCall("getXhr");
-    var var_o_xhr = null;
-
-    if (window.XMLHttpRequest) {
-        // Browser moderni (IE7+, FF, Chrome)
-        var_o_xhr = new XMLHttpRequest();
-    } else if (window.ActiveXObject) {
-        // Browser legacy (IE6)
-        try {
-            var_o_xhr = new ActiveXObject("Msxml2.XMLHTTP");
-        } catch (e) {
-            try {
-                var_o_xhr = new ActiveXObject("Microsoft.XMLHTTP");
-            } catch (E_ERR) {
-                Objectis.logError("getXhr: Impossibile creare oggetto ActiveX.");
-            }
-        }
-    }
-    return var_o_xhr;
-};
-
-/**
- * @function ajaxLoad
- * @description Effettua una richiesta GET semplice.
- * @param {String} S_URL - L'URL da chiamare.
- * @param {Function} FN_CALLBACK - Funzione da eseguire al successo.
- */
-Objectis.ajaxLoad = function(S_URL, FN_CALLBACK) {
-    Objectis.trackCall("ajaxLoad");
-
-    if (!Objectis.isString(S_URL) || !Objectis.isFunction(FN_CALLBACK)) {
-        Objectis.logError("ajaxLoad: Parametri non validi.");
-        return;
+(function(var_o_root) {
+    if (!var_o_root.Objectis) {
+        var_o_root.Objectis = { var_a_components: {} };
     }
 
-    var var_o_xhr = Objectis.getXhr();
-    if (!var_o_xhr) return;
+    /**
+     * @function ajax
+     * @description Gestore chiamate AJAX cross-browser.
+     */
+    var_o_root.Objectis.ajax = function(var_o_options) {
+        var var_o_xhr;
+        var var_o_self = this;
 
-    var_o_xhr.onreadystatechange = function() {
-        if (var_o_xhr.readyState === 4) {
-            if (var_o_xhr.status === 200) {
-                FN_CALLBACK(var_o_xhr.responseText);
-            } else {
-                Objectis.logError("ajaxLoad: Errore HTTP " + var_o_xhr.status);
-            }
+        // Supporto per browser datati (ActiveX) o moderni (XHR)
+        if (window.XMLHttpRequest) {
+            var_o_xhr = new XMLHttpRequest();
+        } else if (window.ActiveXObject) {
+            var_o_xhr = new ActiveXObject("Microsoft.XMLHTTP");
         }
+
+        if (!var_o_xhr) {
+            this.log("AJAX non supportato dal browser.", "ERROR");
+            return;
+        }
+
+        var_o_xhr.onreadystatechange = function() {
+            if (var_o_xhr.readyState === 4) {
+                if (var_o_xhr.status === 200) {
+                    var var_o_data = null;
+                    try {
+                        // Parsing manuale per massima compatibilità
+                        var_o_data = eval("(" + var_o_xhr.responseText + ")");
+                    } catch (var_o_e) {
+                        var_o_data = var_o_xhr.responseText;
+                    }
+                    
+                    if (var_o_options.onSuccess) {
+                        var_o_options.onSuccess(var_o_data);
+                    }
+                } else {
+                    if (var_o_options.onError) {
+                        var_o_options.onError("Status: " + var_o_xhr.status);
+                    }
+                }
+            }
+        };
+
+        var var_s_method = var_o_options.method || "GET";
+        var_o_xhr.open(var_s_method, var_o_options.url, true);
+        
+        // Direttiva "Niente Cookie" (come da tua richiesta del 2026-02-16)
+        if (var_o_xhr.withCredentials !== undefined) {
+            var_o_xhr.withCredentials = false;
+        }
+
+        this.log("Inviando richiesta " + var_s_method + " a " + var_o_options.url, "AJAX");
+        var_o_xhr.send(var_o_options.data || null);
     };
 
-    var_o_xhr.open("GET", S_URL, true);
-    var_o_xhr.send(null);
-};
-
-/**
- * @function ajaxToStorage
- * @description Carica dati da un URL e li mappa direttamente nello Pseudo-Cookie.
- * @param {String} S_URL - URL della risorsa JSON.
- * @param {String} S_STORAGE_KEY - Chiave dello Pseudo-Cookie da aggiornare.
- */
-Objectis.ajaxToStorage = function(S_URL, S_STORAGE_KEY) {
-    Objectis.trackCall("ajaxToStorage");
-    
-    Objectis.ajaxLoad(S_URL, function(var_s_response) {
-        var var_o_data;
-        try {
-            // Tentativo di parsing JSON (Richiede JSON polyfill su IE6)
-            var_o_data = JSON.parse(var_s_response);
-            // Se il JSON è un oggetto, cerchiamo un valore specifico, altrimenti usiamo tutto
-            var var_s_value = (typeof var_o_data === "object") ? var_o_data[S_STORAGE_KEY] : var_s_response;
-            
-            Objectis.setPseudoCookie(S_STORAGE_KEY, var_s_value);
-            Objectis.logError("Ajax: Storage aggiornato per " + S_STORAGE_KEY);
-        } catch (e) {
-            // Se non è JSON, salviamo la stringa grezza
-            Objectis.setPseudoCookie(S_STORAGE_KEY, var_s_response);
-        }
-    });
-};
+})(window);

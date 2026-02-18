@@ -1,39 +1,32 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html lang="it">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Objectis Framework - Clean Entry Point</title>
-    <script type="text/javascript" src="js/core/Core.js"></script>
+    <title>Objectis Framework - Dynamic Data Vault</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <link rel="stylesheet" type="text/css" href="css/button.css">
+    <link rel="stylesheet" type="text/css" href="css/panel.css">
 </head>
 <body>
 
-    <div id="wrapper">
-        <h1>Objectis Clean Test</h1>
-
-        <div id="pnl-test-ajax" class="obj-panel">
-            <h3>Test Sincronizzazione Server</h3>
-            
-            <p>Valore nel registro: <strong class="obj-bind" obj-key="click_count">0</strong></p>
-            
-            <div id="btn-ajax-test" class="obj-button" obj-label="Sincronizza con Server"></div>
+    <div id="main-container">
+        <div class="obj-panel opt-title-Modulo_Cifratura">
+            <p>I dati verranno salvati nell'oggetto generato dinamicamente.</p>
+            <div id="btn-save-custom" class="obj-button opt-label-Cifra_Locale"></div>
         </div>
 
-        <div id="pnl-1" class="obj-panel">
-            <h3>Statistiche Live</h3>
-            <p class="obj-bind" obj-key="click_count">0</p>
-            
-            <div id="btn-1" class="obj-button" obj-label="Incrementa"></div>
+        <div class="obj-panel opt-title-Modulo_Sincronizzazione">
+            <p>Scarica dati dal server e caricali nel Vault dinamico:</p>
+            <div id="btn-ajax-test" class="obj-button opt-label-Sincronizza_Server"></div>
         </div>
 
-        <div id="pnl-2" class="obj-panel">
-            <h3>Pannello Secondario</h3>
-            <div id="btn-2" class="obj-button" obj-label="Annulla" obj-color="#dc3545">Loading...</div>
-        </div>
-
-        <div id="obj-debug-log">
-            <div>[Console di Sistema]</div>
+        <div class="obj-panel opt-title-Console_Log">
+            <div id="system-log-container" style="height: 150px; overflow-y: auto; background: #000; color: #00ff00; padding: 10px; font-family: monospace; font-size: 11px;">
+                Objectis: [SYSTEM] In attesa...
+            </div>
         </div>
     </div>
+
+    <script type="text/javascript" src="js/core/Objectis.js"></script>
 
 </body>
 </html>

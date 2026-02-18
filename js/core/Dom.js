@@ -1,62 +1,85 @@
 /**
  * @file Dom.js
- * @description Utility per la manipolazione del DOM.
+ * @description Utility DOM conforme HTML 4.01. Gestione database via tag Param.
+ * @version 1.2.6
  */
 
-Objectis.setStyle = function(O_EL, O_STYLES) {
-    Objectis.trackCall("setStyle");
-    if (!O_EL || !O_EL.style) return;
+if (typeof window.Objectis === "undefined") {
+    window.Objectis = { var_a_components: {} };
+}
 
-    for (var var_s_prop in O_STYLES) {
-        var var_s_val = O_STYLES[var_s_prop];
-        // In IE6/Chrome, scrivere direttamente sulla proprietà è più veloce
-        O_EL.style[var_s_prop] = var_s_val;
-        
-        // Se stiamo cercando di nascondere, assicuriamoci che accada
-        if (var_s_prop === "display" && var_s_val === "none") {
-            O_EL.style.visibility = "hidden"; // Doppio colpo per sicurezza
+window.Objectis.getElementsByClassName = function(var_s_class, var_o_root) {
+    var var_o_base = var_o_root || document;
+    var var_a_res = [];
+    if (var_o_base.getElementsByClassName) {
+        var var_o_l = var_o_base.getElementsByClassName(var_s_class);
+        for (var var_n_i = 0; var_n_i < var_o_l.length; var_n_i++) var_a_res.push(var_o_l[var_n_i]);
+    } else {
+        var var_a_all = var_o_base.getElementsByTagName("*");
+        var var_s_re = new RegExp("(^|\\s)" + var_s_class + "(\\s|$)");
+        for (var var_n_j = 0; var_n_j < var_a_all.length; var_n_j++) {
+            if (var_s_re.test(var_a_all[var_n_j].className)) var_a_res.push(var_a_all[var_n_j]);
         }
     }
+    return var_a_res;
+};
+
+window.Objectis.getParam = function(var_o_el, var_s_key, var_s_def) {
+    if (!var_o_el || !var_o_el.className) return var_s_def;
+    var var_s_pre = "opt-" + var_s_key + "-";
+    var var_a_p = var_o_el.className.split(/\s+/);
+    for (var var_n_i = 0; var_n_i < var_a_p.length; var_n_i++) {
+        if (var_a_p[var_n_i].indexOf(var_s_pre) === 0) {
+            return var_a_p[var_n_i].substring(var_s_pre.length).split("_").join(" ");
+        }
+    }
+    return var_s_def;
+};
+
+window.Objectis.loadStyle = function(var_s_path) {
+    var var_o_link = document.createElement("link");
+    var_o_link.rel = "stylesheet";
+    var_o_link.type = "text/css";
+    var_o_link.href = var_s_path;
+    document.getElementsByTagName("head")[0].appendChild(var_o_link);
+};
+
+window.Objectis.getMeta = function(var_o_el, var_s_key) {
+    if (!var_o_el) return "";
+    var var_a_p = var_o_el.getElementsByTagName("param");
+    for (var var_n_i = 0; var_n_i < var_a_p.length; var_n_i++) {
+        if (var_a_p[var_n_i].getAttribute("name") === var_s_key) {
+            return var_a_p[var_n_i].getAttribute("value") || "";
+        }
+    }
+    return "";
 };
 
 /**
- * @function getParam
- * @description Legge un attributo dall'elemento e restituisce un default se manca.
- * @param {Object} O_EL - Elemento DOM.
- * @param {String} S_NAME - Nome dell'attributo.
- * @param {String} S_DEFAULT - Valore di ritorno se l'attributo non esiste.
- * @return {String} var_s_value
+ * @function setMeta
+ * @description Inserisce o aggiorna un tag <param> nell'Object per la verifica via Inspector.
  */
-Objectis.getParam = function(O_EL, S_NAME, S_DEFAULT) {
-    Objectis.trackCall("getParam");
-    var var_s_value = O_EL.getAttribute(S_NAME);
-    return (var_s_value !== null && var_s_value !== "") ? var_s_value : S_DEFAULT;
-};
-
-/**
- * @function setContent
- * @description Aggiorna il testo o l'HTML di un elemento.
- */
-Objectis.setContent = function(O_EL, var_s_value) {
-    Objectis.trackCall("setContent");
-    if (!O_EL) return;
+window.Objectis.setMeta = function(var_o_el, var_s_key, var_s_val) {
+    if (!var_o_el) return false;
     
-    // Gestione compatibile: se è un input usa value, altrimenti innerHTML
-    if (O_EL.tagName === "INPUT" || O_EL.tagName === "TEXTAREA") {
-        O_EL.value = var_s_value;
-    } else {
-        O_EL.innerHTML = var_s_value;
-    }
-};
+    var var_a_p = var_o_el.getElementsByTagName("param");
+    var var_b_found = false;
 
-/**
- * @function syncElement
- * @description Sincronizza un elemento con un valore del registro.
- */
-Objectis.syncElement = function(O_EL, S_KEY) {
-    Objectis.trackCall("syncElement");
-    var var_s_val = Objectis.getPseudoCookie(S_KEY, "");
-    if (var_s_val !== "") {
-        Objectis.setContent(O_EL, var_s_val);
+    for (var var_n_i = 0; var_n_i < var_a_p.length; var_n_i++) {
+        if (var_a_p[var_n_i].getAttribute("name") === var_s_key) {
+            var_a_p[var_n_i].setAttribute("value", var_s_val);
+            var_b_found = true;
+            break;
+        }
     }
+
+    if (!var_b_found) {
+        var var_o_newParam = document.createElement("param");
+        var_o_newParam.name = var_s_key;
+        var_o_newParam.value = var_s_val;
+        var_o_el.appendChild(var_o_newParam);
+    }
+    
+    this.log("Inspector Update: " + var_s_key + " caricato.", "DOM");
+    return true;
 };

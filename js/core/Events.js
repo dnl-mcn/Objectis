@@ -1,7 +1,7 @@
 /**
  * @file Events.js
  * @description Gestore centralizzato degli eventi globali.
- * @version 0.0.6
+ * @version 0.0.7
  */
 
 /**
@@ -28,7 +28,7 @@ Objectis.setEvents = function() {
     };
 
     if (const_B_DEBUG) {
-        Objectis.logError("Events: Global listeners initialized via setEvents.");
+        Objectis.log("Events: Global listeners initialized via setEvents.", "INFO");
     }
 };
 
@@ -36,22 +36,22 @@ Objectis.setEvents = function() {
  * @function addEvent
  * @description Gestore cross-browser per gli eventi (IE6+).
  */
-Objectis.addEvent = function(O_EL, S_EV, F_FUNC) {
+Objectis.addEvent = function(var_o_el, var_s_ev, var_f_func) {
     Objectis.trackCall("addEvent");
     
-    if (!O_EL) return;
+    if (!var_o_el) return;
 
-    if (O_EL.addEventListener) {
+    if (var_o_el.addEventListener) {
         // Chrome, Firefox, Safari, IE9+
-        O_EL.addEventListener(S_EV, F_FUNC, false);
-    } else if (O_EL.attachEvent) {
+        var_o_el.addEventListener(var_s_ev, var_f_func, false);
+    } else if (var_o_el.attachEvent) {
         // IE6, IE7, IE8
         var var_o_handler = function() {
-            return F_FUNC.call(O_EL, window.event);
+            return var_f_func.call(var_o_el, window.event);
         };
-        O_EL.attachEvent("on" + S_EV, var_o_handler);
+        var_o_el.attachEvent("on" + var_s_ev, var_o_handler);
     } else {
-        O_EL["on" + S_EV] = F_FUNC;
+        var_o_el["on" + var_s_ev] = var_f_func;
     }
 };
 
@@ -59,13 +59,14 @@ Objectis.addEvent = function(O_EL, S_EV, F_FUNC) {
  * @function fireEvent
  * @description Scatena un evento custom su un elemento o globalmente.
  */
-Objectis.fireEvent = function(O_EL, S_EVENT_NAME, O_DATA) {
+Objectis.fireEvent = function(var_o_el, var_s_eventName, var_o_data) {
     Objectis.trackCall("fireEvent");
     if (const_B_DEBUG) {
-        Objectis.logError("Evento scatenato: " + S_EVENT_NAME + " su " + (O_EL.id || "global"));
+        // Correzione: prima era logError, ora è un normale log INFO
+        Objectis.log("Evento scatenato: " + var_s_eventName + " su " + (var_o_el.id || "global"), "INFO");
     }
     // Per ora usiamo un sistema di callback semplice compatibile con IE6
-    if (O_EL["on" + S_EVENT_NAME]) {
-        O_EL["on" + S_EVENT_NAME](O_DATA);
+    if (var_o_el["on" + var_s_eventName]) {
+        var_o_el["on" + var_s_eventName](var_o_data);
     }
 };

@@ -1,0 +1,23 @@
+/**
+ * @file panel.css
+ * @description Stile essenziale per i contenitori panel.
+ */
+
+ .obj-panel {
+    border: 1px solid #cccccc;
+    background-color: #f9f9f9;
+    margin-bottom: 15px;
+    padding: 0;
+}
+
+.ui-panel-header {
+    background-color: #f0f0f0;
+    padding: 8px 12px;
+    font-weight: bold;
+    border-bottom: 1px solid #cccccc;
+    color: #333333;
+}
+
+.ui-panel-body {
+    padding: 15px;
+}

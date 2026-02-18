@@ -1,5 +1,9 @@
 {
-    "click_count": "99",
     "status": "success",
-    "message": "Dati recuperati dal server"
+    "timestamp": "2026-02-18T11:35:00Z",
+    "data": {
+        "sync_id": "OBJ-992831",
+        "remote_records": 42,
+        "message": "Sincronizzazione completata con il database centrale."
+    }
 }

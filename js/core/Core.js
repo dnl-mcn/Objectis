@@ -1,151 +1,129 @@
 /**
  * @file Core.js
- * @description Kernel del framework Objectis: gestione dipendenze, statistiche e autoload.
- * @version 0.1.5
+ * @description Kernel del framework Objectis: gestione dipendenze e bootloader sincronizzato e idempotente.
+ * @version 1.0.6
  */
 
-// Definizione namespace globale
-var Objectis = {};
+var Objectis = {
+    var_n_modulesToLoad: 0,
+    var_n_modulesLoaded: 0,
+    a_modules: [],
+    var_b_isBooted: false,
+    var_b_bootStarted: false // Lucchetto di sicurezza contro il doppio avvio
+};
 
 /**
- * @description Costanti globali di sistema.
- * @constant {Boolean} const_B_DEBUG - Attiva le funzioni di log e tracciamento.
+ * @constant {Boolean} const_B_DEBUG - Flag per abilitare i log estesi.
  */
 var const_B_DEBUG = true;
 
 /**
- * @description Oggetto per la raccolta di metriche e stati del sistema.
- * @var {Object} var_o_stats
+ * @function log
+ * @description Visualizza messaggi di sistema nel DIV di debug e in console.
+ * @param {String} S_MSG - Testo del messaggio.
+ * @param {String} S_TYPE - Tipo di log (INFO, BOOT, ERROR, READY).
  */
-var var_o_stats = {
-    var_n_totalCalls: 0,
-    var_o_moduleCalls: {}
-};
-
-/**
- * @description Registro dei moduli caricati per la prevenzione dei duplicati.
- * @var {Object} var_o_registry
- */
-Objectis.var_o_registry = {};
-
-/**
- * @function trackCall
- * @description Conteggia le chiamate alle funzioni per fini statistici.
- * @param {String} S_FUNC_NAME - Nome della funzione chiamata.
- */
-Objectis.trackCall = function(S_FUNC_NAME) {
-    var_o_stats.var_n_totalCalls++;
+Objectis.log = function(S_MSG, S_TYPE) {
+    var var_s_type = S_TYPE || "INFO";
+    var var_o_console = document.getElementById("obj-debug-console");
+    var var_s_out = "[" + var_s_type + "] " + S_MSG;
     
-    if (!var_o_stats.var_o_moduleCalls[S_FUNC_NAME]) {
-        var_o_stats.var_o_moduleCalls[S_FUNC_NAME] = 0;
+    if (window.console) {
+        console.log("[Objectis] (" + var_s_type + ") " + S_MSG);
     }
-    var_o_stats.var_o_moduleCalls[S_FUNC_NAME]++;
     
-    if (const_B_DEBUG && window.status) {
-        window.status = "Calls: " + var_o_stats.var_n_totalCalls;
+    if (var_o_console) {
+        if (var_s_type === "BOOT" && S_MSG.indexOf("Inizializzazione") !== -1) {
+            var_o_console.innerHTML = ""; 
+        }
+        var_o_console.innerHTML += var_s_out + "<br>";
+        var_o_console.scrollTop = var_o_console.scrollHeight;
     }
 };
 
 /**
  * @function logError
- * @description Visualizza messaggi di sistema nell'area di log dedicata.
- * @param {String} S_MSG - Messaggio da visualizzare.
+ * @description Metodo specifico per la segnalazione di errori critici.
+ * @param {String} S_MSG - Messaggio di errore.
  */
 Objectis.logError = function(S_MSG) {
-    Objectis.trackCall("logError");
-    var var_o_log = document.getElementById("obj-debug-log");
-    if (var_o_log) {
-        var_o_log.innerHTML += "<div>[Objectis] " + S_MSG + "</div>";
-    }
+    Objectis.log(S_MSG, "ERROR");
+};
+
+/**
+ * @function trackCall
+ * @description Monitora il numero di chiamate effettuate ai metodi.
+ * @param {String} S_FUNC_NAME - Il nome della funzione.
+ */
+Objectis.trackCall = function(S_FUNC_NAME) {
+    // Tracciamento silenziato durante il caricamento base
 };
 
 /**
  * @function loadModule
- * @description Carica un modulo tramite iniezione nel DOM (No document.write).
+ * @description Inietta uno script e gestisce la sequenza di boot asincrona.
  * @param {String} S_PATH - Percorso del file.
- * @param {Array} A_DEPS - Dipendenze.
  */
-Objectis.loadModule = function(S_PATH, A_DEPS) {
-    Objectis.trackCall("loadModule");
-
-    if (A_DEPS && typeof A_DEPS === "object") {
-        var var_n_i = 0;
-        for (var_n_i = 0; var_n_i < A_DEPS.length; var_n_i++) {
-            Objectis.loadModule(A_DEPS[var_n_i]);
-        }
-    }
-
-    if (Objectis.var_o_registry[S_PATH]) return;
-    Objectis.var_o_registry[S_PATH] = "loading";
-
-    // Creazione dinamica del tag script
+Objectis.loadModule = function(S_PATH) {
+    Objectis.var_n_modulesToLoad++;
     var var_o_script = document.createElement("script");
     var_o_script.type = "text/javascript";
-    var_o_script.src = "js/" + S_PATH;
-
-    // Gestione caricamento per browser diversi
-    var_o_script.onload = function() { Objectis.var_o_registry[S_PATH] = "loaded"; };
+    // Timestamp per bypassare la cache durante lo sviluppo
+    var_o_script.src = "js/" + S_PATH + "?v=" + new Date().getTime();
     
-    // Supporto specifico per IE6/7/8 (onreadystatechange)
-    var_o_script.onreadystatechange = function() {
-        if (this.readyState === "complete" || this.readyState === "loaded") {
-            Objectis.var_o_registry[S_PATH] = "loaded";
+    var_o_script.onload = function() {
+        Objectis.var_n_modulesLoaded++;
+        Objectis.log("Modulo caricato: " + S_PATH, "BOOT");
+        
+        if (Objectis.var_n_modulesLoaded === Objectis.var_n_modulesToLoad) {
+            if (typeof Objectis.init === "function" && !Objectis.var_b_isBooted) {
+                Objectis.var_b_isBooted = true;
+                setTimeout(Objectis.init, 100);
+            }
         }
     };
-
-    var var_o_head = document.getElementsByTagName("head")[0];
-    var_o_head.appendChild(var_o_script);
+    
+    var_o_script.onerror = function() {
+        Objectis.logError("Errore nel caricamento del modulo: " + S_PATH);
+    };
+    
+    document.getElementsByTagName("head")[0].appendChild(var_o_script);
 };
 
 /**
  * @function boot
- * @description Carica i moduli minimi indispensabili per il funzionamento del motore.
+ * @description Entry point del sistema. Carica la lista moduli core.
  */
 Objectis.boot = function() {
-    Objectis.loadModule("core/TypeCheck.js");
-    Objectis.loadModule("core/TimeEngine.js");
-    Objectis.loadModule("core/Dom.js");
-    Objectis.loadModule("core/BoxModel.js"); // Caricato nel set iniziale
-    Objectis.loadModule("core/DomQuery.js", ["core/TypeCheck.js"]);
-    Objectis.loadModule("core/Events.js");
+    // Se il boot è già partito, blocchiamo immediatamente l'esecuzione secondaria
+    if (Objectis.var_b_bootStarted) {
+        return; 
+    }
+    Objectis.var_b_bootStarted = true;
     
-
+    Objectis.var_n_modulesToLoad = 0;
+    Objectis.var_n_modulesLoaded = 0;
     
-    // Aggiungiamo Storage come dipendenza
-    Objectis.loadModule("core/Storage.js");
+    Objectis.log("Inizializzazione Objectis...", "BOOT");
     
-    // Lo Scanner ora dipende anche dal BoxModel per i componenti UI
-    Objectis.loadModule("core/DomScanner.js", ["core/Dom.js", "core/BoxModel.js"]);
-    
-    Objectis.loadModule("core/Ajax.js");
-
-    Objectis.loadModule("core/Objectis.js", [
+    var var_a_core = [
+        "core/Logger.js",
+        "core/Crypto.js",
+        "core/TypeCheck.js",
+        "core/Dom.js",
+        "core/Events.js",
         "core/Storage.js",
-        "core/Ajax.js","core/TimeEngine.js", "core/Events.js", "core/DomScanner.js"]);
+        "core/DomScanner.js",
+        "core/Ajax.js",
+        "ui/Panel.js",
+        "ui/Button.js",
+        "core/Objectis.js"
+    ];
+
+    for (var var_n_i = 0; var_n_i < var_a_core.length; var_n_i++) {
+        Objectis.loadModule(var_a_core[var_n_i]);
+    }
 };
 
-/**
- * @function loadStyle
- * @description Inietta un tag <link> nel document per caricare CSS.
- */
-Objectis.loadStyle = function(S_PATH) {
-    Objectis.trackCall("loadStyle");
-    
-    var var_s_id = "css-" + S_PATH.replace(/\//g, "-").replace(/\./g, "-");
-    if (document.getElementById(var_s_id)) return;
-
-    var var_o_link = document.createElement("link");
-    var_o_link.id = var_s_id;
-    var_o_link.rel = "stylesheet";
-    var_o_link.type = "text/css";
-    var_o_link.href = S_PATH;
-
-    // Gestione errore caricamento
-    var_o_link.onerror = function() {
-        Objectis.logError("ERRORE: Impossibile caricare il CSS in " + S_PATH);
-    };
-
-    document.getElementsByTagName("head")[0].appendChild(var_o_link);
-};
-// Esecuzione del bootstrap immediato
+// Esecuzione protetta
 Objectis.boot();

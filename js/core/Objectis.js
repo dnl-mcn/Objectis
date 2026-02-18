@@ -1,183 +1,128 @@
 /**
  * @file Objectis.js
- * @description Inizializzatore globale con controllo dipendenze.
- * @version 0.1.9
+ * @description Core Framework. Generazione dinamica del tag Object (Data Vault).
+ * @version 1.4.0
  */
-Objectis.init = function() {
-    Objectis.trackCall("init");
 
-    // Verifica dipendenze critiche
-    if (!Objectis.setEvents || !Objectis.scanDocument || !Objectis.getTimestamp) {
-        setTimeout(Objectis.init, 50);
-        return;
-    }
-
-    // NUOVO: Attendiamo che il DOM sia caricato completamente (document.readyState)
-    // Questo risolve il problema su Chrome e IE6
-    if (document.readyState !== "complete") {
-        setTimeout(Objectis.init, 50);
-        return;
-    }
-
-    Objectis.logError("--- DOM Pronto: Avvio Scansione ---");
-
-    // 1. Configurazione eventi globali
-    Objectis.setEvents();
-
-    // 2. Scansione effettiva
-    Objectis.scanDocument();
-
-    Objectis.logError("Framework pronto.");
-};
+if (typeof window.Objectis === "undefined") {
+    window.Objectis = {
+        var_a_components: {},
+        const_B_DEBUG: true,
+        var_s_version: "1.4.0",
+        var_b_isBooting: false,
+        var_b_isReady: false,
+        var_s_vaultId: "obj-dynamic-vault"
+    };
+}
 
 /**
- * Avvio sicuro: invece di addEvent diretto, usiamo un check ciclico 
- * finché il modulo Events non è pronto.
+ * @function createDataVault
+ * @description Genera un tag <object> a fine body per lo storage dei parametri.
  */
-Objectis.waitForCoreAndInit = function() {
-    if (typeof Objectis.addEvent === "function") {
-        Objectis.addEvent(window, "load", function() {
-            Objectis.init();
-        });
-    } else {
-        setTimeout(Objectis.waitForCoreAndInit, 50);
-    }
+window.Objectis.createDataVault = function() {
+    if (document.getElementById(this.var_s_vaultId)) return;
+    
+    var var_o_vault = document.createElement("object");
+    var_o_vault.id = this.var_s_vaultId;
+    var_o_vault.type = "text/plain";
+    var_o_vault.style.display = "none";
+    
+    // Inizializzazione con parametri di default
+    var var_o_p1 = document.createElement("param");
+    var_o_p1.name = "vault_status";
+    var_o_p1.value = "initialized";
+    var_o_vault.appendChild(var_o_p1);
+    
+    document.body.appendChild(var_o_vault);
+    this.log("Data Vault generato a fondo pagina.", "CORE");
 };
 
-Objectis.activateComponent = function(O_EL, S_COMP_NAME, S_PATH) {
-    Objectis.trackCall("activateComponent");
-
-    if (Objectis[S_COMP_NAME]) {
-        new Objectis[S_COMP_NAME](O_EL);
-    } else {
-        // Se non è già in coda, lo carichiamo
-        if (!Objectis.var_o_registry[S_PATH]) {
-            if (const_B_DEBUG) { Objectis.logError("In attesa di: " + S_PATH); }
-            Objectis.loadModule(S_PATH);
-        }
-        // Riprova finché il costruttore non è disponibile
-        setTimeout(function() {
-            Objectis.activateComponent(O_EL, S_COMP_NAME, S_PATH);
-        }, 50);
-    }
-};
-
-// Store dei dati (Model)
-Objectis.var_o_data = {
-    var_s_user: "Ospite",
-    var_n_clicks: 0
-};
-
-Objectis.setEvents = function() {
-    Objectis.trackCall("setEvents");
-
-    // Controllo esistenza metodo per evitare TypeError
-    if (typeof Objectis.getPseudoCookie !== "function") {
-        Objectis.logError("Warning: Storage.js non ancora caricato. Rinvio setEvents.");
-        setTimeout(Objectis.setEvents, 50);
+window.Objectis.init = function() {
+    if (this.var_b_isReady) return;
+    
+    if (typeof this.scan !== "function" && !this.var_b_isBooting) {
+        this.var_b_isBooting = true;
+        this.log("Avvio sistema v" + this.var_s_version, "BOOT");
+        this.importModule("js/core/Dom.js");
+        this.importModule("js/core/DomScanner.js");
+        this.importModule("js/core/Ajax.js");
         return;
     }
-
-    var var_o_pnl1 = document.getElementById("pnl-1");
-    // Recupero iniziale dal registro DOM
-    var var_n_saved = parseInt(Objectis.getPseudoCookie("click_count", "0"), 10);
     
-    var var_o_btn1 = document.getElementById("btn-1");
+    if (typeof this.scan === "function") {
+        this.var_b_isReady = true;
+        this.var_b_isBooting = false;
+        
+        // Creazione Vault prima della scansione
+        this.createDataVault();
+        
+        this.scan();
+        this.setEvents();
+    }
+};
 
-    var var_n_saved = parseInt(Objectis.getPseudoCookie("click_count", "0"), 10);
-    Objectis.var_o_data.var_n_clicks = var_n_saved;
+window.Objectis.setEvents = function() {
+    var var_o_self = this;
+    var var_o_vault = document.getElementById(this.var_s_vaultId);
+    
+    // 1. Bottone Cifratura (Scrive nel Vault Dinamico)
+    var var_o_btnCrypto = this.var_a_components["btn-save-custom"];
+    if (var_o_btnCrypto && !var_o_btnCrypto.var_b_logicBound) {
+        var_o_btnCrypto.onComponentClick = function() {
+            var var_s_testData = "DatoLocale2026";
+            var var_s_encoded = btoa(var_s_testData);
+            
+            var_o_self.setMeta(var_o_vault, "local_data_b64", var_s_encoded);
+            var_o_self.log("Dato locale cifrato nel Vault Dinamico.", "STORAGE");
+        };
+        var_o_btnCrypto.var_b_logicBound = true;
+    }
 
-    if (var_o_btn1) {
-        var_o_btn1.onComponentClick = function() {
-            Objectis.var_o_data.var_n_clicks++;
+    // 2. Bottone AJAX (Carica JSON nel Vault Dinamico)
+    var var_o_btnAjax = this.var_a_components["btn-ajax-test"];
+    if (var_o_btnAjax && !var_o_btnAjax.var_b_logicBound) {
+        var_o_btnAjax.onComponentClick = function() {
+            var_o_self.log("Recupero JSON per Vault...", "AJAX");
             
-            // Salvataggio nello Pseudo-Cookie via JS
-            Objectis.setPseudoCookie("click_count", Objectis.var_o_data.var_n_clicks);
-            
-            // Update UI
-            if (var_o_pnl1) {
-                Objectis.setContent(var_o_pnl1.getElementsByTagName("p")[0], 
-                    "Dati registrati nel DOM: " + Objectis.var_o_data.var_n_clicks);
+            if (typeof var_o_self.ajax === "function") {
+                var_o_self.ajax({
+                    url: "test/data.json",
+                    method: "GET",
+                    onSuccess: function(var_o_res) {
+                        if (var_o_res && var_o_res.data) {
+                            var var_s_crypto = btoa(var_o_res.data.message);
+                            
+                            // Iniezione nel vault dinamico
+                            var_o_self.setMeta(var_o_vault, "remote_sync_id", var_o_res.data.sync_id);
+                            var_o_self.setMeta(var_o_vault, "remote_payload_b64", var_s_crypto);
+                            
+                            var_o_self.log("Parametri JSON iniettati nel Vault Dinamico.", "SUCCESS");
+                        }
+                    }
+                });
             }
         };
+        var_o_btnAjax.var_b_logicBound = true;
     }
-
-    Objectis.trackCall("setEvents");
-
-    var var_o_btnUpdate = document.getElementById("btn-sync");
-    if (var_o_btnUpdate) {
-        var_o_btnUpdate.onComponentClick = function() {
-            // Scarica i dati e aggiorna automaticamente tutti gli obj-bind="click_count"
-            Objectis.ajaxToStorage("api/data.json", "click_count");
-        };
-    }
-
-    var var_o_btnAjax = document.getElementById("btn-ajax");
-    
-    if (var_o_btnAjax) {
-        var_o_btnAjax.onComponentClick = function() {
-            this.innerHTML = "CARICAMENTO...";
-            
-            Objectis.ajax({
-                url: "api/stats.json",
-                success: function(var_o_res) {
-                    // Aggiorniamo lo Pseudo-Cookie con il dato dal server
-                    // Questo scatenerà automaticamente bindAll()
-                    Objectis.setPseudoCookie("click_count", var_o_res.count);
-                    
-                    var_o_btnAjax.innerHTML = "DATI SINCRONIZZATI";
-                },
-                error: function(var_n_status) {
-                    Objectis.logError("Errore AJAX: " + var_n_status);
-                    var_o_btnAjax.innerHTML = "ERRORE SERVER";
-                }
-            });
-        };
-    }
-
-    var var_o_btnTest = document.getElementById("btn-ajax-test");
-    
-    if (var_o_btnTest) {
-        var_o_btnTest.onComponentClick = function() {
-            Objectis.logError("Test: Avvio richiesta AJAX...");
-            this.innerHTML = "CONNETTENDO...";
-            
-            // Chiamata al nostro nuovo metodo integrato
-            // Scarica da 'api/test.json' e aggiorna 'click_count'
-            Objectis.ajaxToStorage("test/data.json", "click_count");
-            
-            var var_o_self = this;
-            setTimeout(function() {
-                var_o_self.innerHTML = "SINCRONIZZATO";
-            }, 1000);
-        };
-    }
-
-    var var_o_debugLog = document.getElementById("obj-debug-log");
-    if (var_o_debugLog) {
-        var_o_debugLog.innerHTML += "<div style='margin-top:10px; border-top:1px solid #555; padding-top:5px;'>" + 
-                                    Objectis.getDocumentation() + "</div>";
-}
 };
 
-/**
- * @function getDocumentation
- * @description Genera un report dei componenti e dei metodi registrati.
- */
-Objectis.getDocumentation = function() {
-    Objectis.trackCall("getDocumentation");
-    var var_s_html = "<h2>Documentazione Framework</h2><ul>";
-
-    for (var var_s_key in Objectis) {
-        if (typeof Objectis[var_s_key] === "function") {
-            var_s_html += "<li><strong>Metodo:</strong> " + var_s_key + "()</li>";
-        } else if (typeof Objectis[var_s_key] === "object") {
-            var_s_html += "<li><strong>Modulo/Data:</strong> " + var_s_key + "</li>";
-        }
+window.Objectis.log = function(var_s_msg, var_s_type) {
+    var var_s_prefix = var_s_type ? "[" + var_s_type + "] " : "";
+    if (window.console) console.log("Objectis: " + var_s_prefix + var_s_msg);
+    var var_o_cont = document.getElementById("system-log-container");
+    if (var_o_cont) {
+        var var_o_div = document.createElement("div");
+        var_o_div.innerHTML = "<strong>" + var_s_prefix + "</strong> " + var_s_msg;
+        var_o_cont.appendChild(var_o_div);
+        var_o_cont.scrollTop = var_o_cont.scrollHeight;
     }
-
-    var_s_html += "</ul>";
-    return var_s_html;
 };
 
-Objectis.waitForCoreAndInit();
+window.Objectis.importModule = function(var_s_path) {
+    var var_o_script = document.createElement("script");
+    var_o_script.type = "text/javascript";
+    var_o_script.src = var_s_path;
+    document.getElementsByTagName("head")[0].appendChild(var_o_script);
+};
+
+window.Objectis.init();
