@@ -1,23 +1,46 @@
 /**
  * @file panel.css
- * @description Stile essenziale per i contenitori panel.
+ * @description Layout relativo consolidato.
  */
 
- .obj-panel {
-    border: 1px solid #cccccc;
-    background-color: #f9f9f9;
-    margin-bottom: 15px;
+ html, body {
+    margin: 0;
     padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #1a1a1a;
+    color: #eee;
 }
 
-.ui-panel-header {
-    background-color: #f0f0f0;
-    padding: 8px 12px;
+#main-viewport {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+.obj-panel {
+    position: relative;
+    margin: 15px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    display: block;
+    clear: both;
+    zoom: 1;
+}
+
+.panel-header {
+    background: #333;
+    padding: 10px;
+    border-bottom: 1px solid #444;
     font-weight: bold;
-    border-bottom: 1px solid #cccccc;
-    color: #333333;
+    text-transform: uppercase;
+    font-size: 10px;
 }
 
-.ui-panel-body {
-    padding: 15px;
+.panel-content {
+    position: relative;
+    padding: 10px;
+    /* Rimuoviamo overflow:hidden qui per permettere ai bottoni di respirare */
 }

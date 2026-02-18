@@ -1,40 +1,53 @@
 /**
  * @file Objectis.js
- * @description Core Framework. Generazione dinamica del tag Object (Data Vault).
- * @version 1.4.0
+ * @description Core Framework. Supporto Viewport Relativo e Scrolling proprietario.
+ * @version 1.4.2
  */
 
 if (typeof window.Objectis === "undefined") {
     window.Objectis = {
         var_a_components: {},
         const_B_DEBUG: true,
-        var_s_version: "1.4.0",
+        var_s_version: "1.4.2",
         var_b_isBooting: false,
         var_b_isReady: false,
-        var_s_vaultId: "obj-dynamic-vault"
+        var_s_vaultId: "obj-dynamic-vault",
+        var_o_viewport: null
     };
 }
 
+window.Objectis.applyGlobalStyles = function() {
+    var var_o_html = document.getElementsByTagName("html")[0];
+    var var_o_body = document.body;
+    
+    var_o_html.style.overflow = "hidden";
+    var_o_html.style.height = "100%";
+    
+    var_o_body.style.overflow = "hidden";
+    var_o_body.style.height = "100%";
+    
+    this.var_o_viewport = document.getElementById("main-viewport");
+    this.log("Interfaccia vincolata. Scrolling nativo disabilitato.", "UI");
+};
+
 /**
- * @function createDataVault
- * @description Genera un tag <object> a fine body per lo storage dei parametri.
+ * @function scrollViewport
+ * @description Metodo che verrà richiamato dalla nostra scrollbar.
  */
+window.Objectis.scrollViewport = function(var_n_pixels) {
+    if (this.var_o_viewport) {
+        // Muove la "tela" relativa verso l'alto o il basso
+        this.var_o_viewport.style.top = var_n_pixels + "px";
+    }
+};
+
 window.Objectis.createDataVault = function() {
     if (document.getElementById(this.var_s_vaultId)) return;
-    
     var var_o_vault = document.createElement("object");
     var_o_vault.id = this.var_s_vaultId;
     var_o_vault.type = "text/plain";
     var_o_vault.style.display = "none";
-    
-    // Inizializzazione con parametri di default
-    var var_o_p1 = document.createElement("param");
-    var_o_p1.name = "vault_status";
-    var_o_p1.value = "initialized";
-    var_o_vault.appendChild(var_o_p1);
-    
     document.body.appendChild(var_o_vault);
-    this.log("Data Vault generato a fondo pagina.", "CORE");
 };
 
 window.Objectis.init = function() {
@@ -42,7 +55,6 @@ window.Objectis.init = function() {
     
     if (typeof this.scan !== "function" && !this.var_b_isBooting) {
         this.var_b_isBooting = true;
-        this.log("Avvio sistema v" + this.var_s_version, "BOOT");
         this.importModule("js/core/Dom.js");
         this.importModule("js/core/DomScanner.js");
         this.importModule("js/core/Ajax.js");
@@ -53,9 +65,8 @@ window.Objectis.init = function() {
         this.var_b_isReady = true;
         this.var_b_isBooting = false;
         
-        // Creazione Vault prima della scansione
+        this.applyGlobalStyles();
         this.createDataVault();
-        
         this.scan();
         this.setEvents();
     }
@@ -65,25 +76,18 @@ window.Objectis.setEvents = function() {
     var var_o_self = this;
     var var_o_vault = document.getElementById(this.var_s_vaultId);
     
-    // 1. Bottone Cifratura (Scrive nel Vault Dinamico)
     var var_o_btnCrypto = this.var_a_components["btn-save-custom"];
-    if (var_o_btnCrypto && !var_o_btnCrypto.var_b_logicBound) {
+    if (var_o_btnCrypto) {
         var_o_btnCrypto.onComponentClick = function() {
-            var var_s_testData = "DatoLocale2026";
-            var var_s_encoded = btoa(var_s_testData);
-            
+            var var_s_encoded = btoa("DatoLocale2026");
             var_o_self.setMeta(var_o_vault, "local_data_b64", var_s_encoded);
-            var_o_self.log("Dato locale cifrato nel Vault Dinamico.", "STORAGE");
+            var_o_self.log("Vault aggiornato via posizionamento relativo.", "STORAGE");
         };
-        var_o_btnCrypto.var_b_logicBound = true;
     }
 
-    // 2. Bottone AJAX (Carica JSON nel Vault Dinamico)
     var var_o_btnAjax = this.var_a_components["btn-ajax-test"];
-    if (var_o_btnAjax && !var_o_btnAjax.var_b_logicBound) {
+    if (var_o_btnAjax) {
         var_o_btnAjax.onComponentClick = function() {
-            var_o_self.log("Recupero JSON per Vault...", "AJAX");
-            
             if (typeof var_o_self.ajax === "function") {
                 var_o_self.ajax({
                     url: "test/data.json",
@@ -91,18 +95,13 @@ window.Objectis.setEvents = function() {
                     onSuccess: function(var_o_res) {
                         if (var_o_res && var_o_res.data) {
                             var var_s_crypto = btoa(var_o_res.data.message);
-                            
-                            // Iniezione nel vault dinamico
-                            var_o_self.setMeta(var_o_vault, "remote_sync_id", var_o_res.data.sync_id);
                             var_o_self.setMeta(var_o_vault, "remote_payload_b64", var_s_crypto);
-                            
-                            var_o_self.log("Parametri JSON iniettati nel Vault Dinamico.", "SUCCESS");
+                            var_o_self.log("Dati caricati nel Vault Dinamico.", "SUCCESS");
                         }
                     }
                 });
             }
         };
-        var_o_btnAjax.var_b_logicBound = true;
     }
 };
 
