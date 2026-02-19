@@ -1,7 +1,7 @@
 /**
  * @file slider.js
- * @description Componente Slider - Connessione automatica al target di scroll.
- * @version 1.2.5
+ * @description Componente Slider - Fix visibilità dinamica IE.
+ * @version 1.2.6
  */
 
 (function(var_o_root) {
@@ -31,9 +31,9 @@
             
             this.cursor = document.createElement("div");
             this.cursor.className = "cursor";
+            this.cursor.style.zoom = "1";
             this.htmlElement.appendChild(this.cursor);
 
-            // AUTO-LINK: Se è lo slider della console, aggancia il log automaticamente
             if (this.htmlElement.id === "console-slider") {
                 this.targetElement = document.getElementById("system-log-container");
                 this.onValueChange = function(var_n_val) {
@@ -44,18 +44,18 @@
             }
 
             this.setEvents();
-            
-            Objectis.requestFrame(function() {
-                var_o_self.refresh();
-            });
+            this.refresh();
         };
 
         this.refresh = function() {
             var var_n_range = this.maxRange - this.minRange;
+            
+            // In IE6/7, invece di display:none, usiamo visibility per mantenere il layout
             if (var_n_range <= 0 && this.isVertical) {
-                this.htmlElement.style.display = "none";
+                this.htmlElement.style.visibility = "hidden";
             } else {
-                this.htmlElement.style.display = "block";
+                this.htmlElement.style.visibility = "visible";
+                this.htmlElement.style.display = "block"; // Forza ricalcolo
                 this.setCursor(this.convertRealToPixel(this.cursorReal), false);
             }
         };
@@ -65,7 +65,7 @@
                 var var_o_rect = Objectis.getRect(var_o_self.htmlElement);
                 var var_o_ev = e || window.event;
                 var var_n_offset = var_o_self.isVertical ? (var_o_ev.clientY - var_o_rect.top) : (var_o_ev.clientX - var_o_rect.left);
-                var var_n_pixel = var_n_offset - (var_o_self.getCursorSize() / 2);
+                var var_n_pixel = var_n_offset - 7; // Offset metà cursore (14/2)
                 var_o_self.setCursor(var_n_pixel, true);
             };
 
@@ -91,9 +91,8 @@
                 var var_n_delta = var_o_ev.wheelDelta ? var_o_ev.wheelDelta : -var_o_ev.detail;
                 if (var_n_delta !== 0) {
                     Objectis.preventDefault(var_o_ev);
-                    var var_n_step = 20; // Step fisso per test
                     var var_n_dir = var_n_delta > 0 ? -1 : 1;
-                    var_o_self.setValue(var_o_self.cursorReal + (var_n_dir * var_n_step));
+                    var_o_self.setValue(var_o_self.cursorReal + (var_n_dir * 20));
                 }
             };
 
@@ -103,26 +102,25 @@
             }
         };
 
-        this.getCursorSize = function() {
-            return 14; 
-        };
-
         this.convertRealToPixel = function(vr) {
-            var s = (this.isVertical ? this.htmlElement.offsetHeight : this.htmlElement.offsetWidth) - 14;
+            var var_o_rect = Objectis.getRect(this.htmlElement);
+            var s = (this.isVertical ? var_o_rect.height : var_o_rect.width) - 14;
             var r = this.maxRange - this.minRange;
             if (s <= 0 || r <= 0) return 0;
             return Math.round((vr - this.minRange) * (s / r));
         };
 
         this.convertPixelToReal = function(vp) {
-            var s = (this.isVertical ? this.htmlElement.offsetHeight : this.htmlElement.offsetWidth) - 14;
+            var var_o_rect = Objectis.getRect(this.htmlElement);
+            var s = (this.isVertical ? var_o_rect.height : var_o_rect.width) - 14;
             var r = this.maxRange - this.minRange;
             if (s <= 0) return this.minRange;
             return Math.round(this.minRange + (vp * (r / s)));
         };
 
         this.setCursor = function(vp, update) {
-            var s = (this.isVertical ? this.htmlElement.offsetHeight : this.htmlElement.offsetWidth) - 14;
+            var var_o_rect = Objectis.getRect(this.htmlElement);
+            var s = (this.isVertical ? var_o_rect.height : var_o_rect.width) - 14;
             if (vp < 0) vp = 0; if (vp > s) vp = s;
 
             if (this.isVertical) {
@@ -139,8 +137,7 @@
 
         this.setValue = function(v) {
             this.cursorReal = Math.max(this.minRange, Math.min(this.maxRange, v));
-            var var_n_pix = this.convertRealToPixel(this.cursorReal);
-            this.setCursor(var_n_pix, true);
+            this.setCursor(this.convertRealToPixel(this.cursorReal), true);
         };
     };
 })(window);
