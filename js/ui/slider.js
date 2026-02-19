@@ -1,7 +1,7 @@
 /**
  * @file slider.js
- * @description Componente Slider - Fix visibilità dinamica IE.
- * @version 1.2.6
+ * @description Componente Slider - Fix divisione per zero e stabilità IE6.
+ * @version 1.2.8
  */
 
 (function(var_o_root) {
@@ -24,14 +24,12 @@
         this.targetElement = null;
 
         this.init = function() {
-            this.htmlElement.style.zoom = "1";
             if (this.isVertical) {
                 this.htmlElement.className += " obj-slider-vertical";
             }
             
             this.cursor = document.createElement("div");
             this.cursor.className = "cursor";
-            this.cursor.style.zoom = "1";
             this.htmlElement.appendChild(this.cursor);
 
             if (this.htmlElement.id === "console-slider") {
@@ -48,14 +46,11 @@
         };
 
         this.refresh = function() {
-            var var_n_range = this.maxRange - this.minRange;
-            
-            // In IE6/7, invece di display:none, usiamo visibility per mantenere il layout
-            if (var_n_range <= 0 && this.isVertical) {
+            var var_n_diff = this.maxRange - this.minRange;
+            if (var_n_diff <= 0) {
                 this.htmlElement.style.visibility = "hidden";
             } else {
                 this.htmlElement.style.visibility = "visible";
-                this.htmlElement.style.display = "block"; // Forza ricalcolo
                 this.setCursor(this.convertRealToPixel(this.cursorReal), false);
             }
         };
@@ -65,8 +60,7 @@
                 var var_o_rect = Objectis.getRect(var_o_self.htmlElement);
                 var var_o_ev = e || window.event;
                 var var_n_offset = var_o_self.isVertical ? (var_o_ev.clientY - var_o_rect.top) : (var_o_ev.clientX - var_o_rect.left);
-                var var_n_pixel = var_n_offset - 7; // Offset metà cursore (14/2)
-                var_o_self.setCursor(var_n_pixel, true);
+                var_o_self.setCursor(var_n_offset - 7, true);
             };
 
             Objectis.addEvent(this.htmlElement, "mousedown", function(e) {
@@ -76,9 +70,7 @@
             });
 
             Objectis.addEvent(document, "mousemove", function(e) {
-                if (var_o_self.isDown) {
-                    var_f_handleInput(e || window.event);
-                }
+                if (var_o_self.isDown) var_f_handleInput(e || window.event);
             });
 
             Objectis.addEvent(window, "mouseup", function() {
@@ -97,15 +89,14 @@
             };
 
             Objectis.addEvent(this.htmlElement, var_s_wheelEvt, var_f_onWheel);
-            if (this.targetElement) {
-                Objectis.addEvent(this.targetElement, var_s_wheelEvt, var_f_onWheel);
-            }
+            if (this.targetElement) Objectis.addEvent(this.targetElement, var_s_wheelEvt, var_f_onWheel);
         };
 
         this.convertRealToPixel = function(vr) {
             var var_o_rect = Objectis.getRect(this.htmlElement);
             var s = (this.isVertical ? var_o_rect.height : var_o_rect.width) - 14;
             var r = this.maxRange - this.minRange;
+            // FIX: Protezione divisione per zero
             if (s <= 0 || r <= 0) return 0;
             return Math.round((vr - this.minRange) * (s / r));
         };
@@ -114,20 +105,20 @@
             var var_o_rect = Objectis.getRect(this.htmlElement);
             var s = (this.isVertical ? var_o_rect.height : var_o_rect.width) - 14;
             var r = this.maxRange - this.minRange;
-            if (s <= 0) return this.minRange;
+            // FIX: Protezione divisione per zero
+            if (s <= 0 || r <= 0) return this.minRange;
             return Math.round(this.minRange + (vp * (r / s)));
         };
 
         this.setCursor = function(vp, update) {
             var var_o_rect = Objectis.getRect(this.htmlElement);
             var s = (this.isVertical ? var_o_rect.height : var_o_rect.width) - 14;
-            if (vp < 0) vp = 0; if (vp > s) vp = s;
+            if (s < 0) s = 0;
+            if (vp < 0) vp = 0; 
+            if (vp > s) vp = s;
 
-            if (this.isVertical) {
-                this.cursor.style.top = vp + "px";
-            } else {
-                this.cursor.style.left = vp + "px";
-            }
+            if (this.isVertical) this.cursor.style.top = vp + "px";
+            else this.cursor.style.left = vp + "px";
 
             if (update) {
                 this.cursorReal = this.convertPixelToReal(vp);

@@ -1,31 +1,39 @@
 /**
  * @file slider.css
- * @description Stile slider verticale reattivo.
+ * @description Stile slider con fix per il Box Model di IE6.
  */
 
  .obj-slider {
     position: relative;
     background: #333;
     border: 1px solid #555;
-    border-radius: 4px;
     cursor: pointer;
-    box-sizing: border-box;
-    width: 100%;
-    height: 100%;
+    overflow: hidden;
+    display: block;
+    zoom: 1; /* Trigger HasLayout indispensabile per IE6 */
 }
 
 .obj-slider-vertical {
     width: 12px;
+    height: 100%;
+    /* Fix IE6: se il genitore ha altezza, questo la prende */
+    _height: 180px; 
 }
 
 .obj-slider .cursor {
     position: absolute;
     background: #0078d7;
     border: 1px solid #eee;
-    width: 14px;
+    width: 10px;
     height: 14px;
-    left: -2px;
+    left: 0;
     top: 0;
-    border-radius: 3px;
-    z-index: 10;
+    z-index: 100;
+    overflow: hidden; /* Fix IE6 per altezza minima div */
+    zoom: 1;
+}
+
+.obj-slider-horizontal {
+    width: 100%;
+    height: 12px;
 }
