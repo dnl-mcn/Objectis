@@ -1,6 +1,7 @@
 /**
  * @file DomScanner.js
- * @description Scanner ufficiale con supporto loadAndInitComponent.
+ * @description Scanner con supporto cross-browser per il caricamento script (IE ready).
+ * @version 1.2.8
  */
 
 (function(var_o_root) {
@@ -49,26 +50,37 @@
 
     var_o_root.Objectis.loadAndInitComponent = function(var_s_type, var_o_el) {
         var var_o_self = this;
+        
+        // Se il modulo è già caricato
         if (this[var_s_type]) {
             var var_o_inst = new this[var_s_type](var_o_el);
-            if (var_o_el.id) this.var_a_components[var_o_el.id] = var_o_inst;
-            var_o_inst.init();
-        } else {
-            var var_s_path = "js/ui/" + var_s_type + ".js";
-            var var_o_script = document.createElement("script");
-            var_o_script.type = "text/javascript";
-            var_o_script.src = var_s_path;
-            var_o_script.onload = function() {
-                var_o_self.loadAndInitComponent(var_s_type, var_o_el);
-            };
-            document.getElementsByTagName("head")[0].appendChild(var_o_script);
+            if (var_o_el.id) {
+                this.var_a_components[var_o_el.id] = var_o_inst;
+            }
+            if (typeof var_o_inst.init === "function") {
+                var_o_inst.init();
+            }
+            return;
         }
+
+        // Altrimenti carica il file .js
+        var var_s_path = "js/ui/" + var_s_type + ".js";
+        var var_o_script = document.createElement("script");
+        var_o_script.type = "text/javascript";
+        var_o_script.src = var_s_path + "?v=" + Math.random();
+        
+        // Fix per IE: onreadystatechange invece di onload
+        var var_b_done = false;
+        var_o_script.onreadystatechange = var_o_script.onload = function() {
+            if (!var_b_done && (!this.readyState || this.readyState === "loaded" || this.readyState === "complete")) {
+                var_b_done = true;
+                // Pulizia per evitare memory leak in IE
+                var_o_script.onload = var_o_script.onreadystatechange = null;
+                var_o_self.loadAndInitComponent(var_s_type, var_o_el);
+            }
+        };
+        
+        document.getElementsByTagName("head")[0].appendChild(var_o_script);
     };
 
-    if (var_o_root.Objectis.var_b_isBooting) {
-        setTimeout(function() {
-            var_o_root.Objectis.var_b_isBooting = false;
-            var_o_root.Objectis.init();
-        }, 50);
-    }
 })(window);
