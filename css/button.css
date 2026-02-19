@@ -1,27 +1,35 @@
 /**
  * @file button.css
- * @description Stile bottoni Objectis per layout relativo.
+ * @description Stili per il componente bottone Objectis.
  */
 
  .obj-button {
-    display: block; /* Fondamentale per il calcolo delle dimensioni */
-    min-height: 30px;
-    margin: 10px 0;
-    padding: 10px;
-    background-color: #444;
+    position: relative;
+    display: inline-block;
+    padding: 5px 15px;
+    background: #444;
     border: 1px solid #666;
     color: #fff;
     text-align: center;
     cursor: pointer;
-    font-size: 12px;
-    zoom: 1; /* Fix HasLayout per IE6 */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    zoom: 1; /* IE Fix per layout */
 }
 
 .obj-button:hover {
-    background-color: #555;
+    background: #555;
     border-color: #888;
 }
 
-.button-label {
-    pointer-events: none;
+.obj-button-active {
+    background: #222 !important;
+    border-color: #0078d7 !important;
+}
+
+.obj-button-label {
+    font-size: 12px;
+    font-family: Tahoma, sans-serif;
 }

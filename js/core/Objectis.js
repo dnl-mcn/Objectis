@@ -1,14 +1,14 @@
 /**
  * @file Objectis.js
- * @description Core Framework - Fix refresh slider per IE.
- * @version 1.5.0
+ * @description Core Framework - Fix binding eventi asincroni.
+ * @version 1.5.1
  */
 
 if (typeof window.Objectis === "undefined") {
     window.Objectis = {
         var_a_components: {},
         const_B_DEBUG: true,
-        var_s_version: "1.5.0",
+        var_s_version: "1.5.1",
         var_b_isBooting: false,
         var_b_isReady: false
     };
@@ -32,7 +32,7 @@ window.Objectis.init = function() {
     this.var_b_isReady = true;
     this.scan();
     this.setEvents();
-    this.log("Objectis Core Ready.", "SYSTEM");
+    this.log("Framework caricato correttamente.", "SYSTEM");
 };
 
 window.Objectis.log = function(var_s_msg, var_s_type) {
@@ -48,24 +48,30 @@ window.Objectis.log = function(var_s_msg, var_s_type) {
         if (var_o_slider) {
             var var_n_max = Math.max(0, var_o_cont.scrollHeight - var_o_cont.offsetHeight);
             var_o_slider.maxRange = var_n_max;
-            // Forziamo il refresh dello slider
             var_o_slider.refresh();
             var_o_slider.setValue(var_n_max);
-        } else {
-            // Se lo slider sta ancora caricando, scorriamo a mano
-            var_o_cont.scrollTop = var_o_cont.scrollHeight;
         }
+        var_o_cont.scrollTop = var_o_cont.scrollHeight;
     }
 };
 
 window.Objectis.setEvents = function() {
     var var_o_self = this;
-    var var_o_btn = var_o_self.var_a_components["btn-test-log"];
-    if (var_o_btn) {
-        var_o_btn.onComponentClick = function() {
-            var_o_self.log("Generazione log manuale...", "USER");
-        };
-    }
+    
+    // Tentativo di binding ricorsivo per componenti asincroni
+    var var_f_bind = function() {
+        var var_o_btn = var_o_self.var_a_components["btn-test-log"];
+        if (var_o_btn) {
+            var_o_btn.onComponentClick = function() {
+                var_o_self.log("Evento intercettato con successo.", "UI");
+            };
+        } else {
+            // Se il bottone non è ancora pronto, riprova tra poco
+            setTimeout(var_f_bind, 200);
+        }
+    };
+    
+    var_f_bind();
 };
 
 window.Objectis.importModule = function(var_s_path) {
