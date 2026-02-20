@@ -8,7 +8,7 @@
     padding: 0.5em;
     background: #ccc;
     color: #333;
-    border: 1px outset #ccc;
+    border: 2px outset #ccc;
     cursor: default;
     text-align: center;
     vertical-align: middle;
@@ -18,11 +18,7 @@
     *display: inline; 
 }
 
-.obj-button:active {
-    border: 1px inset #ccc;
-}
-
-.obj-button-label {
-    font-size: 12px;
-    font-family: Tahoma, sans-serif;
+.obj-button.obj-button-active {
+    background: #c00;
+    border: 2px inset #ccc;
 }

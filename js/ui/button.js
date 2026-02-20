@@ -1,7 +1,7 @@
 /**
  * @file button.js
- * @description Componente Bottone - Pulizia stili inline e fix eventi.
- * @version 1.1.3
+ * @description Componente Bottone - Gestione label diretta e fix classi IE6.
+ * @version 1.1.6
  */
 
 (function(var_o_root) {
@@ -9,38 +9,57 @@
         var_o_root.Objectis = { var_a_components: {} };
     }
 
+    /**
+     * @constructor button
+     * @param {HTMLElement} var_o_el L'elemento DOM del bottone
+     */
     var_o_root.Objectis.button = function(var_o_el) {
         var var_o_self = this;
         this.htmlElement = var_o_el;
-        this.label = Objectis.getParam(var_o_el, "label", "Button");
         this.onComponentClick = null;
-
+        this.label = "";
+        
+        /**
+         * @method init
+         * Inizializzazione pulita: legge il testo e resetta il contenuto.
+         */
         this.init = function() {
-            // Prepariamo il contenuto testuale sostituendo gli underscore
-            var var_s_text = this.label.replace(/_/g, " ");
+            // 1. Leggiamo il testo presente nel tag (nuovo standard)
+            // Usiamo una regex per il trim compatibile con IE6
+            var var_s_inner = this.htmlElement.innerHTML.replace(/^\s+|\s+$/g, '');
             
-            // Creiamo l'elemento label internamente invece di usare innerHTML crudo
-            var var_o_span = document.createElement("div");
-            var_o_span.className = "obj-button-label";
-            var_o_span.appendChild(document.createTextNode(var_s_text));
-            
-            // Puliamo e appendiamo
-            this.htmlElement.innerHTML = "";
-            this.htmlElement.appendChild(var_o_span);
+            if (var_s_inner !== "" && var_s_inner.indexOf('<') === -1) {
+                // Se c'è testo semplice, lo usiamo come label
+                this.label = var_s_inner;
+            } else {
+                // 2. Fallback: se il tag è vuoto, usiamo il vecchio opt-label-
+                var var_s_param = Objectis.getParam(this.htmlElement, "label", "Button");
+                this.label = var_s_param.replace(/_/g, " ");
+            }
 
+            // 3. Riscrittura pulita (rimuove spazi sporchi e garantisce solo testo)
+            this.htmlElement.innerHTML = "";
+            this.htmlElement.appendChild(document.createTextNode(this.label));
+
+            // Attivazione ascoltatori eventi
             this.setEvents();
+            
             Objectis.log("Bottone '" + this.label + "' inizializzato.", "UI");
         };
 
+        /**
+         * @method setEvents
+         * Gestione interazioni senza dipendenze da classi interne.
+         */
         this.setEvents = function() {
-            // Gestione stato attivo (visuale)
+            // Stato attivo: usiamo i nuovi metodi helper di Dom.js
             Objectis.addEvent(this.htmlElement, "mousedown", function() {
-                var_o_self.htmlElement.className += " obj-button-active";
+                Objectis.addClass(var_o_self.htmlElement, "obj-button-active");
             });
 
+            // Reset stato attivo
             Objectis.addEvent(document, "mouseup", function() {
-                // Rimuoviamo la classe usando una regex per sicurezza su IE
-                var_o_self.htmlElement.className = var_o_self.htmlElement.className.replace(/\bobj-button-active\b/g, "");
+                Objectis.removeClass(var_o_self.htmlElement, "obj-button-active");
             });
 
             // Gestione click logico

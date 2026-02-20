@@ -29,7 +29,7 @@
     position: absolute;
     background: #555;
     z-index: 11;
-    cursor: pointer;
+    cursor: default;
     overflow: hidden; /* Fix per div vuoti in IE6 */
 }
 

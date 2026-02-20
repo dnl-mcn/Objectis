@@ -72,4 +72,34 @@
         }
         return var_s_def;
     };
+
+    /**
+     * @method hasClass
+     * Verifica la presenza di una classe su un elemento.
+     */
+    var_o_root.Objectis.hasClass = function(var_o_el, var_s_name) {
+        if (!var_o_el || !var_o_el.className) return false;
+        return new RegExp('(\\s|^)' + var_s_name + '(\\s|$)').test(var_o_el.className);
+    };
+
+    /**
+     * @method addClass
+     * Aggiunge una classe se non presente.
+     */
+    var_o_root.Objectis.addClass = function(var_o_el, var_s_name) {
+        if (!this.hasClass(var_o_el, var_s_name)) {
+            var_o_el.className += (var_o_el.className ? " " : "") + var_s_name;
+        }
+    };
+
+    /**
+     * @method removeClass
+     * Rimuove una classe e pulisce gli spazi bianchi.
+     */
+    var_o_root.Objectis.removeClass = function(var_o_el, var_s_name) {
+        if (this.hasClass(var_o_el, var_s_name)) {
+            var var_o_reg = new RegExp('(\\s|^)' + var_s_name + '(\\s|$)');
+            var_o_el.className = var_o_el.className.replace(var_o_reg, ' ').replace(/^\s+|\s+$/g, '');
+        }
+    };
 })(window);
