@@ -1,39 +1,41 @@
 /**
  * @file slider.css
- * @description Stile slider con fix per il Box Model di IE6.
+ * @description Fix per IE6 (Alpha filters).
  */
 
  .obj-slider {
-    position: relative;
-    background: #333;
-    border: 1px solid #555;
-    cursor: pointer;
-    overflow: hidden;
-    display: block;
-    zoom: 1; /* Trigger HasLayout indispensabile per IE6 */
+    position: relative !important;
+    overflow: hidden !important;
+    zoom: 1; /* Trigger hasLayout per IE6 */
 }
 
-.obj-slider-vertical {
-    width: 12px;
+.obj-slider-viewport {
+    width: 100%;
     height: 100%;
-    /* Fix IE6: se il genitore ha altezza, questo la prende */
-    _height: 180px; 
-}
-
-.obj-slider .cursor {
-    position: absolute;
-    background: #0078d7;
-    border: 1px solid #eee;
-    width: 10px;
-    height: 14px;
-    left: 0;
-    top: 0;
-    z-index: 100;
-    overflow: hidden; /* Fix IE6 per altezza minima div */
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
     zoom: 1;
 }
 
-.obj-slider-horizontal {
-    width: 100%;
-    height: 12px;
+.obj-slider-track-y {
+    position: absolute;
+    z-index: 10;
+    background: inherit;
+    filter: alpha(opacity=5); /* Fallback IE6 per RGBA */
 }
+
+.obj-slider-cursor {
+    position: absolute;
+    background: #555;
+    z-index: 11;
+    cursor: pointer;
+    overflow: hidden; /* Fix per div vuoti in IE6 */
+}
+
+/* Classi di posizionamento */
+.scroll-y-right .obj-slider-track-y { top: 0; right: 0; width: 1em; height: 100%; }
+.scroll-y-right .obj-slider-cursor-y { right: 2px; width: 1em; }
+
+.scroll-y-left .obj-slider-track-y { top: 0; left: 0; width: 1em; height: 100%; }
+.scroll-y-left .obj-slider-cursor-y { left: 2px; width: 1em; }

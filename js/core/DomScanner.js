@@ -1,86 +1,111 @@
 /**
  * @file DomScanner.js
- * @description Scanner con supporto cross-browser per il caricamento script (IE ready).
+ * @description Scanner DOM JIT - Loop estirpato e compatibilità completa IE garantita.
  * @version 1.2.8
  */
 
 (function(var_o_root) {
     if (!var_o_root.Objectis) {
-        var_o_root.Objectis = { var_a_components: {} };
+        var_o_root.Objectis = { var_a_components: {}, var_a_loadingQueue: {} };
     }
 
+    // Contatore per l'hard kill-switch: previene loop se onerror fallisce
+    var_o_root.Objectis.var_a_retryCount = {};
+
     var_o_root.Objectis.scan = function() {
-        var var_a_allElements = document.getElementsByTagName("*");
-        var var_a_targets = [];
-
-        for (var var_n_i = 0; var_n_i < var_a_allElements.length; var_n_i++) {
-            var var_o_el = var_a_allElements[var_n_i];
-            if (var_o_el.className && var_o_el.className.indexOf("obj-") !== -1) {
-                var_a_targets.push(var_o_el);
-            }
-        }
-
-        for (var var_n_j = 0; var_n_j < var_a_targets.length; var_n_j++) {
-            var var_o_target = var_a_targets[var_n_j];
-            var var_s_compType = this.extractComponentType(var_o_target.className);
-            
-            if (var_s_compType && !this.isSubComponent(var_s_compType)) {
-                this.loadAndInitComponent(var_s_compType, var_o_target);
-            }
-        }
-    };
-
-    var_o_root.Objectis.isSubComponent = function(var_s_type) {
-        var var_a_blacklist = ["panel-content", "panel-header", "button-label"];
-        for (var var_n_m = 0; var_n_m < var_a_blacklist.length; var_n_m++) {
-            if (var_s_type === var_a_blacklist[var_n_m]) return true;
-        }
-        return false;
-    };
-
-    var_o_root.Objectis.extractComponentType = function(var_s_className) {
-        var var_a_parts = var_s_className.split(/\s+/);
-        for (var var_n_k = 0; var_n_k < var_a_parts.length; var_n_k++) {
-            if (var_a_parts[var_n_k].indexOf("obj-") === 0) {
-                return var_a_parts[var_n_k].substring(4);
-            }
-        }
-        return null;
-    };
-
-    var_o_root.Objectis.loadAndInitComponent = function(var_s_type, var_o_el) {
         var var_o_self = this;
+        var var_a_liveElements = document.getElementsByTagName("*");
+        var var_a_staticElements = [];
         
-        // Se il modulo è già caricato
-        if (this[var_s_type]) {
-            var var_o_inst = new this[var_s_type](var_o_el);
-            if (var_o_el.id) {
-                this.var_a_components[var_o_el.id] = var_o_inst;
-            }
-            if (typeof var_o_inst.init === "function") {
-                var_o_inst.init();
-            }
-            return;
+        // FIX FONDAMENTALE: Congeliamo gli elementi in un array statico. 
+        // Impedisce loop infiniti causati dalla modifica del DOM (es. da panel.js) durante il ciclo.
+        for (var var_n_k = 0; var_n_k < var_a_liveElements.length; var_n_k++) {
+            var_a_staticElements.push(var_a_liveElements[var_n_k]);
         }
 
-        // Altrimenti carica il file .js
-        var var_s_path = "js/ui/" + var_s_type + ".js";
-        var var_o_script = document.createElement("script");
-        var_o_script.type = "text/javascript";
-        var_o_script.src = var_s_path + "?v=" + Math.random();
-        
-        // Fix per IE: onreadystatechange invece di onload
-        var var_b_done = false;
-        var_o_script.onreadystatechange = var_o_script.onload = function() {
-            if (!var_b_done && (!this.readyState || this.readyState === "loaded" || this.readyState === "complete")) {
-                var_b_done = true;
-                // Pulizia per evitare memory leak in IE
-                var_o_script.onload = var_o_script.onreadystatechange = null;
-                var_o_self.loadAndInitComponent(var_s_type, var_o_el);
-            }
-        };
-        
-        document.getElementsByTagName("head")[0].appendChild(var_o_script);
-    };
+        var var_s_prefix = "obj-";
+        var var_b_pending = false;
 
+        for (var var_n_i = 0; var_n_i < var_a_staticElements.length; var_n_i++) {
+            var var_o_el = var_a_staticElements[var_n_i];
+            
+            // FIX IE: Ignora i nodi commento o testo (IE li include in getElementsByTagName("*"))
+            if (!var_o_el || var_o_el.nodeType !== 1) continue;
+
+            // Usiamo una proprietà diretta sul nodo (invece di getAttribute) per solidità cross-browser
+            if (var_o_el._obj_init === true) continue;
+
+            var var_s_class = var_o_el.className;
+            
+            if (var_s_class && typeof var_s_class === "string" && var_s_class.indexOf(var_s_prefix) !== -1) {
+                var var_a_classes = var_s_class.split(" ");
+                
+                for (var var_n_j = 0; var_n_j < var_a_classes.length; var_n_j++) {
+                    var var_s_name = var_a_classes[var_n_j];
+
+                    if (var_s_name.indexOf(var_s_prefix) === 0) {
+                        var var_a_parts = var_s_name.split("-");
+                        if (var_a_parts.length < 2) continue;
+                        
+                        var var_s_compName = var_a_parts[1];
+
+                        // Controllo rigoroso contro i loop: se è 'undefined', il modulo non esiste ANCORA in memoria
+                        if (typeof this[var_s_compName] === "undefined") {
+                            
+                            // Inizializza contatore tentativi
+                            if (typeof this.var_a_retryCount[var_s_compName] === "undefined") {
+                                this.var_a_retryCount[var_s_compName] = 0;
+                            }
+
+                            // KILL-SWITCH: Dopo 3 tentativi ignoriamo il modulo per sempre
+                            if (this.var_a_retryCount[var_s_compName] >= 3) {
+                                this.log("Modulo " + var_s_compName + " abortito (timeout).", "ERROR");
+                                this[var_s_compName] = false; // Forza un valore per uscire dall'undefined
+                                continue;
+                            }
+
+                            if (this.var_a_loadingQueue[var_s_compName] !== "loading") {
+                                this.var_a_loadingQueue[var_s_compName] = "loading";
+                                this.var_a_retryCount[var_s_compName]++;
+                                
+                                this.importStyle("css/" + var_s_compName + ".css");
+                                // Passiamo il nome componente a importModule per mappare gli errori
+                                this.importModule("js/ui/" + var_s_compName + ".js", var_s_compName);
+                            }
+                            var_b_pending = true;
+                            continue;
+                        }
+
+                        // Se il componente è una funzione (caricato correttamente), lo istanziamo
+                        if (typeof this[var_s_compName] === "function") {
+                            // Segniamo come inizializzato istantaneamente prima di qualsiasi esecuzione
+                            var_o_el._obj_init = true;
+                            
+                            var var_s_id = var_o_el.id || (var_s_compName + "_" + Math.random().toString().substring(2, 8));
+                            
+                            if (!this.var_a_components[var_s_id]) {
+                                try {
+                                    var var_o_instance = new this[var_s_compName](var_o_el);
+                                    this.var_a_components[var_s_id] = var_o_instance;
+                                    
+                                    if (typeof var_o_instance.init === "function") {
+                                        var_o_instance.init();
+                                    }
+                                } catch (var_o_err) {
+                                    this.log("Errore critico in " + var_s_compName + ": " + (var_o_err.message || "Unknown Error"), "ERROR");
+                                }
+                            }
+                            
+                            // Chiamata centralizzata al gestore eventi (camelCase come richiesto)
+                            this.setEvents();
+                        }
+                    }
+                }
+            }
+        }
+
+        if (var_b_pending) {
+            setTimeout(function() { var_o_self.scan(); }, 1000);
+        }
+    };
 })(window);

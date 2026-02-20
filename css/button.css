@@ -1,32 +1,25 @@
 /**
  * @file button.css
- * @description Stili per il componente bottone Objectis.
+ * @description Stili per il componente bottone del framework Objectis.
  */
 
  .obj-button {
-    position: relative;
     display: inline-block;
-    padding: 5px 15px;
-    background: #444;
-    border: 1px solid #666;
-    color: #fff;
+    padding: 0.5em;
+    background: #ccc;
+    color: #333;
+    border: 1px outset #ccc;
+    cursor: default;
     text-align: center;
-    cursor: pointer;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    zoom: 1; /* IE Fix per layout */
+    vertical-align: middle;
+    
+    /* IE6 Fix: Trigger HasLayout per visualizzazione inline-block corretta */
+    zoom: 1;
+    *display: inline; 
 }
 
-.obj-button:hover {
-    background: #555;
-    border-color: #888;
-}
-
-.obj-button-active {
-    background: #222 !important;
-    border-color: #0078d7 !important;
+.obj-button:active {
+    border: 1px inset #ccc;
 }
 
 .obj-button-label {

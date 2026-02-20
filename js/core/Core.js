@@ -115,8 +115,8 @@ Objectis.boot = function() {
         "core/Storage.js",
         "core/DomScanner.js",
         "core/Ajax.js",
-        "ui/Panel.js",
-        "ui/Button.js",
+        "ui/panel.js",
+        "ui/button.js",
         "core/Objectis.js"
     ];
 

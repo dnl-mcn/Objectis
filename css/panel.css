@@ -9,8 +9,8 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: #1a1a1a;
-    color: #eee;
+    background-color: #fff;
+    color: #333;
     font-family: Tahoma, Verdana, sans-serif;
 }
 
@@ -22,25 +22,29 @@
 }
 
 .obj-panel {
-    position: relative;
-    margin: 15px;
-    background: #2a2a2a;
-    border: 1px solid #444;
-    display: block;
-    zoom: 1;
+    position: relative; /* Base per il posizionamento assoluto dello slider */
+    background: #fff;
+    border: none;
+    margin: 10px;
+    padding: 0;
+    zoom: 1; 
+    overflow: hidden;
 }
 
-.panel-header {
+.obj-panel-header {
     background: #333;
-    padding: 10px;
-    border-bottom: 1px solid #444;
+    color: #0078d7;
+    padding: 5px 10px;
     font-weight: bold;
+    border-bottom: 1px solid #444;
+    font-family: Tahoma, sans-serif;
     font-size: 11px;
 }
 
-.panel-content {
-    position: relative;
+.obj-panel-content {
     padding: 10px;
+    position: relative;
+    zoom: 1;
 }
 
 .console-wrapper {
@@ -58,10 +62,11 @@
     right: 20px;
     bottom: 0;
     overflow: hidden;
-    color: #0f0;
+    color: #960;
     font-family: monospace;
     font-size: 11px;
     padding: 5px;
+    background: #f0f0f0;
 }
 
 .console-scrollbar {
