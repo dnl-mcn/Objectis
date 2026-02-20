@@ -1,0 +1,47 @@
+/**
+ * @file checkbox.css
+ */
+
+ .obj-checkbox {
+    display: block;
+    cursor: pointer;
+    padding: 0.1em;
+    zoom: 1; /* HasLayout IE6 */
+    font-family: Arial, sans-serif;
+    font-size: 0.8em;
+}
+
+.obj-checkbox-status {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border: 1px solid #666;
+    background: #fff;
+    vertical-align: middle;
+    margin-right: 8px;
+    overflow: hidden;
+    line-height: 0.8em;
+    font-size: 0.8em;
+}
+
+/* Simula il segno di spunta */
+.obj-checkbox-checked .obj-checkbox-status {
+    background: #555;
+    border-color: #000;
+}
+
+.checkbox-label {
+    vertical-align: middle;
+    color: #333;
+    font-size: 1em;
+    line-height: 1em;
+}
+
+.checkbox-value {
+    display: none; /* Valore tecnico nascosto */
+}
+
+
+.obj-checkbox-checked {
+    
+}

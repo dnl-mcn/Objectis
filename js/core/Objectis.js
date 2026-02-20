@@ -143,11 +143,21 @@ window.Objectis.log = function(var_s_msg, var_s_type) {
  * Gestione centralizzata degli eventi.
  */
 window.Objectis.setEvents = function() {
+    // Esempio gestione bottone specifica
     var var_o_btn = this.var_a_components["btn-test-log"];
     if (var_o_btn && !var_o_btn.var_b_bound) {
         var_o_btn.var_b_bound = true;
         var_o_btn.onComponentClick = function() {
             window.Objectis.log("User action: Button clicked", "UI");
+        };
+    }
+
+    // Esempio gestione checkbox specifica
+    var var_o_chk = this.var_a_components["chk-accept"];
+    if (var_o_chk && !var_o_chk.var_b_bound) {
+        var_o_chk.var_b_bound = true;
+        var_o_chk.onComponentChange = function(var_b_newVal) {
+            window.Objectis.log("Checkbox status changed: " + var_b_newVal, "USER");
         };
     }
 };

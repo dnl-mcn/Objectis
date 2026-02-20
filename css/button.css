@@ -19,6 +19,6 @@
 }
 
 .obj-button.obj-button-active {
-    background: #c00;
+    background: #c0c0c0;
     border: 2px inset #ccc;
 }

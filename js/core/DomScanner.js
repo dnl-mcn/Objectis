@@ -1,7 +1,7 @@
 /**
  * @file DomScanner.js
- * @description Scanner DOM JIT - Loop estirpato e compatibilità completa IE garantita.
- * @version 1.2.8
+ * @description Scanner DOM JIT - Logica strutturale rigida per il riconoscimento componenti.
+ * @version 1.3.0
  */
 
 (function(var_o_root) {
@@ -29,7 +29,7 @@
         for (var var_n_i = 0; var_n_i < var_a_staticElements.length; var_n_i++) {
             var var_o_el = var_a_staticElements[var_n_i];
             
-            // FIX IE: Ignora i nodi commento o testo (IE li include in getElementsByTagName("*"))
+            // FIX IE: Ignora i nodi commento o testo
             if (!var_o_el || var_o_el.nodeType !== 1) continue;
 
             // Usiamo una proprietà diretta sul nodo (invece di getAttribute) per solidità cross-browser
@@ -43,10 +43,19 @@
                 for (var var_n_j = 0; var_n_j < var_a_classes.length; var_n_j++) {
                     var var_s_name = var_a_classes[var_n_j];
 
+                    // Regola: deve iniziare con il prefisso
                     if (var_s_name.indexOf(var_s_prefix) === 0) {
                         var var_a_parts = var_s_name.split("-");
-                        if (var_a_parts.length < 2) continue;
                         
+                        /**
+                         * REGOLA STRUTTURALE:
+                         * Un componente valido deve essere esattamente "obj-nome".
+                         * Se ha meno di 2 parti (obj-) o più di 2 parti (obj-checkbox-status), lo scartiamo.
+                         */
+                        if (var_a_parts.length !== 2) {
+                            continue;
+                        }
+
                         var var_s_compName = var_a_parts[1];
 
                         // Controllo rigoroso contro i loop: se è 'undefined', il modulo non esiste ANCORA in memoria
@@ -59,8 +68,8 @@
 
                             // KILL-SWITCH: Dopo 3 tentativi ignoriamo il modulo per sempre
                             if (this.var_a_retryCount[var_s_compName] >= 3) {
-                                this.log("Modulo " + var_s_compName + " abortito (timeout).", "ERROR");
-                                this[var_s_compName] = false; // Forza un valore per uscire dall'undefined
+                                this.log("Modulo " + var_s_compName + " abortito.", "ERROR");
+                                this[var_s_compName] = false; 
                                 continue;
                             }
 
