@@ -115,6 +115,13 @@
 
         if (var_b_pending) {
             setTimeout(function() { var_o_self.scan(); }, 1000);
+        } else {
+            // Se non ci sono più pendenti, il framework è "stabile"
+            // Lanciamo il ricalcolo layout con un micro-delay per il rendering IE
+            if (typeof this.Layout !== "undefined" && typeof this.Layout.fixHeights === "function") {
+                setTimeout(function() { var_o_self.Layout.fixHeights(); }, 50);
+            }
+            this.log("Scansione completata e layout stabilizzato.", "SYSTEM");
         }
     };
 })(window);

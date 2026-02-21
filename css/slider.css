@@ -6,7 +6,7 @@
  .obj-slider {
     position: relative !important;
     overflow: hidden !important;
-    /*zoom: 1; /* Trigger hasLayout per IE6 */
+    zoom: 1; /* Trigger hasLayout per IE6 */
     display: inline-block; /* For modern browsers */
     *display: inline;      /* For IE6/7 */
     *zoom: 1;              /* Triggers hasLayout in IE6/7 */

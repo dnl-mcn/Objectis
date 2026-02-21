@@ -1,14 +1,14 @@
 /**
  * @file Objectis.js
- * @description Core Framework v1.7.0 - Supporto per logging in viewport dinamici.
- * @version 1.7.0
+ * @description Core Framework v1.7.1 - Bootloader asincrono con caricamento script.js.
+ * @version 1.7.1
  */
 
 if (typeof window.Objectis === "undefined") {
     window.Objectis = {
         var_a_components: {},
         const_B_DEBUG: true,
-        var_s_version: "1.7.0",
+        var_s_version: "1.7.1",
         var_b_isBooting: false,
         var_b_isReady: false,
         var_a_loadingQueue: {},
@@ -18,7 +18,7 @@ if (typeof window.Objectis === "undefined") {
 
 /**
  * @method init
- * Inizializza il framework e carica i moduli core.
+ * Inizializza il framework e carica i moduli core + la logica script.js.
  */
 window.Objectis.init = function() {
     var var_o_self = this;
@@ -28,9 +28,15 @@ window.Objectis.init = function() {
     if (typeof this.scan !== "function" || typeof this.getParam !== "function") {
         if (!this.var_b_isBooting) {
             this.var_b_isBooting = true;
+            this.importStyle("css/style.css"); // Carica il CSS basilare
+            this.importStyle("css/layout.css"); // Carica il CSS del layout
             this.importModule("js/core/Dom.js", "Dom");
             this.importModule("js/core/DomScanner.js", "DomScanner");
+            this.importModule("js/core/Layout.js", "Layout"); // Carica il motore di layout
             this.importModule("js/core/Ajax.js", "Ajax");
+            
+            // IMPORTAZIONE LOGICA APPLICATIVA
+            this.importModule("js/script.js", "script");
         }
         
         this.var_n_bootRetries++;
@@ -50,7 +56,12 @@ window.Objectis.init = function() {
     // Se i file core sono presenti, dichiariamo il framework pronto
     this.var_b_isReady = true;
     this.log("Objectis Core Ready. IE6 Shield Active.", "SYSTEM");
-    this.scan(); 
+    this.scan();
+
+    // ... alla fine di init, dopo scan() ...
+    //if (this.Layout) {
+    //    this.Layout.fixHeights();
+    //}
 };
 
 /**
@@ -135,30 +146,6 @@ window.Objectis.log = function(var_s_msg, var_s_type) {
         }
     } else if (window.console && window.console.log) {
         console.log(var_s_prefix + var_s_msg);
-    }
-};
-
-/**
- * @method setEvents
- * Gestione centralizzata degli eventi.
- */
-window.Objectis.setEvents = function() {
-    // Esempio gestione bottone specifica
-    var var_o_btn = this.var_a_components["btn-test-log"];
-    if (var_o_btn && !var_o_btn.var_b_bound) {
-        var_o_btn.var_b_bound = true;
-        var_o_btn.onComponentClick = function() {
-            window.Objectis.log("User action: Button clicked", "UI");
-        };
-    }
-
-    // Esempio gestione checkbox specifica
-    var var_o_chk = this.var_a_components["chk-accept"];
-    if (var_o_chk && !var_o_chk.var_b_bound) {
-        var_o_chk.var_b_bound = true;
-        var_o_chk.onComponentChange = function(var_b_newVal) {
-            window.Objectis.log("Checkbox status changed: " + var_b_newVal, "USER");
-        };
     }
 };
 
