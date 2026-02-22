@@ -1,7 +1,7 @@
 /**
  * @file Ajax.js
  * @description Modulo AJAX compatibile con IE6 (ActiveXObject).
- * @version 1.1.3
+ * @version 1.1.4
  */
 
 (function(var_o_root) {
@@ -36,7 +36,7 @@
 
         var_o_xhr.onreadystatechange = function() {
             if (var_o_xhr.readyState === 4) {
-                // IE6 può restituire status 0 per file locali, gestito nel commit precedente
+                // IE6 può restituire status 0 per file locali
                 if (var_o_xhr.status === 200 || var_o_xhr.status === 0) {
                     var var_o_data = null;
                     var var_s_raw = var_o_xhr.responseText;
@@ -74,6 +74,25 @@
 
         this.log("Richiesta avviata verso: " + var_o_options.url, "AJAX");
         var_o_xhr.send(var_o_options.data || null);
+    };
+
+    /**
+     * @method get
+     * @description Shorthand per richieste GET.
+     * @param {String} var_s_url
+     * @param {Function} var_f_callback
+     */
+    var_o_root.Objectis.Ajax = {
+        get: function(var_s_url, var_f_callback) {
+            var_o_root.Objectis.ajax({
+                url: var_s_url,
+                method: "GET",
+                onSuccess: var_f_callback,
+                onError: function(var_s_err) {
+                    var_o_root.Objectis.log("Errore GET: " + var_s_err, "ERROR");
+                }
+            });
+        }
     };
 
 })(window);

@@ -33,6 +33,7 @@ window.Objectis.init = function() {
             this.importModule("js/core/Dom.js", "Dom");
             this.importModule("js/core/DomScanner.js", "DomScanner");
             this.importModule("js/core/Layout.js", "Layout"); // Carica il motore di layout
+            this.importModule("js/core/Data.js", "Data"); // <--- Aggiunto modulo Data
             this.importModule("js/core/Ajax.js", "Ajax");
             
             // IMPORTAZIONE LOGICA APPLICATIVA
