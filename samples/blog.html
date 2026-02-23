@@ -3,25 +3,19 @@
     <head>
         <title>Objectis Framework - Blog post</title>
         <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-        <style type="text/css">
-            #main-viewport { padding: 20px; background: #f0f0f0; }
-            .title-header { font-size: 24px; font-weight: bold; border-bottom: 2px solid #333; margin-bottom: 20px; }
-            .post-content { background: #fff; border: 1px solid #ccc; padding: 15px; }
-            .post-date { font-style: italic; color: #666; font-size: 11px; }
-            .post-author { text-align: right; font-weight: bold; margin-top: 10px; }
-        </style>
     </head>
     <body>
         <div id="main-viewport">
             <div class="obj-layout-row obj-data-bind title-header">obj-data-title</div>
 
+            <div class="obj-layout-col obj-layout-col-25"></div>
             <div class="obj-layout-col obj-layout-col-50 post-content">
-                <div class="obj-layout-row obj-data-bind post-date">obj-data-date</div>
-                <div class="obj-layout-row obj-data-bind" style="font-size: 18px; color: #0055aa;">obj-data-title</div>
-                <hr noshade size="1">
+                <div class="obj-layout-row obj-data-bind">obj-data-title</div>
                 <div class="obj-layout-row obj-data-bind">obj-data-post</div>
-                <div class="obj-layout-row obj-data-bind post-author">obj-data-author</div>
+                <div class="obj-layout-row obj-data-bind post-date">obj-data-date, obj-data-author</div>
             </div>
+            <div class="obj-layout-col obj-layout-col-25"></div>
+
         </div>
         <script type="text/javascript" src="../js/core/Objectis.js"></script>
     </body>

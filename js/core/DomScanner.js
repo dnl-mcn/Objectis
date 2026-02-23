@@ -1,7 +1,7 @@
 /**
  * @file DomScanner.js
- * @description Scanner DOM JIT - Logica strutturale rigida per il riconoscimento componenti.
- * @version 1.3.0
+ * @description Scanner DOM JIT - Gestione on-demand di layout e componenti.
+ * @version 1.3.1
  */
 
 (function(var_o_root) {
@@ -45,6 +45,17 @@
 
                     // Regola: deve iniziare con il prefisso
                     if (var_s_name.indexOf(var_s_prefix) === 0) {
+                        
+                        // ECCEZIONE LAYOUT: Se è un elemento di layout, carica il CSS ma non cercare JS
+                        if (var_s_name.indexOf("obj-layout-") === 0) {
+                            if (this.var_a_loadingQueue["layout"] !== "loaded") {
+                                this.var_a_loadingQueue["layout"] = "loaded";
+                                this.importStyle("css/layout.css");
+                                this.log("Rilevato layout: iniezione layout.css", "SYSTEM");
+                            }
+                            continue; // Non procedere con il controllo componenti JS per il layout
+                        }
+
                         var var_a_parts = var_s_name.split("-");
                         
                         /**

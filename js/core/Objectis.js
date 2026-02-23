@@ -1,20 +1,42 @@
 /**
  * @file Objectis.js
- * @description Core Framework v1.7.1 - Bootloader asincrono con caricamento script.js.
- * @version 1.7.1
+ * @description Core Framework v1.7.5 - Fix caricamento CSS strutturali.
+ * @version 1.7.5
  */
 
 if (typeof window.Objectis === "undefined") {
     window.Objectis = {
         var_a_components: {},
         const_B_DEBUG: true,
-        var_s_version: "1.7.1",
+        var_s_version: "1.7.5",
         var_b_isBooting: false,
         var_b_isReady: false,
         var_a_loadingQueue: {},
-        var_n_bootRetries: 0 
+        var_n_bootRetries: 0,
+        const_S_BASE: "" // Verrà popolata al boot
     };
 }
+
+/**
+ * @method getBasePath
+ * @description Determina la root del progetto in modo robusto.
+ */
+window.Objectis.getBasePath = function() {
+    var var_a_scripts = document.getElementsByTagName("script");
+    var var_s_path = "";
+    for (var var_n_i = 0; var_n_i < var_a_scripts.length; var_n_i++) {
+        var var_s_src = var_a_scripts[var_n_i].src;
+        if (var_s_src.indexOf("js/core/Objectis.js") !== -1) {
+            var_s_path = var_s_src.split("js/core/Objectis.js")[0];
+            break;
+        }
+    }
+    // Assicura che il percorso finisca con /
+    if (var_s_path !== "" && var_s_path.substr(var_s_path.length - 1) !== "/") {
+        var_s_path += "/";
+    }
+    return var_s_path;
+};
 
 /**
  * @method init
@@ -24,31 +46,30 @@ window.Objectis.init = function() {
     var var_o_self = this;
     if (this.var_b_isReady) return;
 
+    // Rilevamento base al primo avvio
+    if (this.const_S_BASE === "") {
+        this.const_S_BASE = this.getBasePath();
+    }
+
     // Verifica la presenza dei moduli core fondamentali
     if (typeof this.scan !== "function" || typeof this.getParam !== "function") {
         if (!this.var_b_isBooting) {
             this.var_b_isBooting = true;
-            this.importStyle("css/style.css"); // Carica il CSS basilare
-            this.importStyle("css/layout.css"); // Carica il CSS del layout
+            
+            // 1. CARICAMENTO CSS STRUTTURALI (Layout e Default)
+            this.importStyle("css/style.css");
+
+            // 2. CARICAMENTO MODULI CORE
             this.importModule("js/core/Dom.js", "Dom");
             this.importModule("js/core/DomScanner.js", "DomScanner");
-            this.importModule("js/core/Layout.js", "Layout"); // Carica il motore di layout
-            this.importModule("js/core/Data.js", "Data"); // <--- Aggiunto modulo Data
             this.importModule("js/core/Ajax.js", "Ajax");
-            
-            // IMPORTAZIONE LOGICA APPLICATIVA
+            this.importModule("js/core/Data.js", "Data");
             this.importModule("js/script.js", "script");
         }
         
         this.var_n_bootRetries++;
-        // KILL-SWITCH Boot: 20 tentativi (circa 2 secondi), poi stacca tutto
-        if (this.var_n_bootRetries > 20) {
-            // FIX IE: Controlla sempre se la console esiste prima di usarla
-            if (window.console && window.console.error) {
-                console.error("FATAL: Boot interrotto.");
-            }
-            return; 
-        }
+        // KILL-SWITCH Boot: 40 tentativi (circa 4 secondi), poi stacca tutto
+        if (this.var_n_bootRetries > 40) return;
 
         setTimeout(function() { var_o_self.init(); }, 100);
         return;
@@ -56,31 +77,32 @@ window.Objectis.init = function() {
 
     // Se i file core sono presenti, dichiariamo il framework pronto
     this.var_b_isReady = true;
-    this.log("Objectis Core Ready. IE6 Shield Active.", "SYSTEM");
-    this.scan();
-
-    // ... alla fine di init, dopo scan() ...
-    //if (this.Layout) {
-    //    this.Layout.fixHeights();
-    //}
+    this.log("Objectis Ready. Base: " + this.const_S_BASE, "SYSTEM");
+    this.scan(); 
 };
 
 /**
  * @method importStyle
- * Inserisce dinamicamente fogli di stile nell'head.
+ * @description Iniezione CSS con risoluzione URL assoluta.
  */
 window.Objectis.importStyle = function(var_s_path) {
     var var_o_head = document.getElementsByTagName("head")[0];
+    if (!var_o_head) return;
+
+    var var_s_fullPath = (var_s_path.indexOf("http") === 0) ? var_s_path : this.const_S_BASE + var_s_path;
+    
+    // Verifica duplicati basata sull'URL assoluto risolto
     var var_a_links = var_o_head.getElementsByTagName("link");
-    
     for (var var_n_i = 0; var_n_i < var_a_links.length; var_n_i++) {
-        if (var_a_links[var_n_i].getAttribute("href") && var_a_links[var_n_i].getAttribute("href").indexOf(var_s_path) !== -1) return;
+        if (var_a_links[var_n_i].href.indexOf(var_s_path) !== -1) return;
     }
-    
+
     var var_o_link = document.createElement("link");
     var_o_link.rel = "stylesheet";
     var_o_link.type = "text/css";
-    var_o_link.href = var_s_path + "?v=" + this.var_s_version;
+    var_o_link.href = var_s_fullPath + "?v=" + this.var_s_version;
+    
+    this.log("Iniezione CSS: " + var_o_link.href, "CORE");
     var_o_head.appendChild(var_o_link);
 };
 
@@ -93,9 +115,12 @@ window.Objectis.importModule = function(var_s_path, var_s_compName) {
     var var_o_head = document.getElementsByTagName("head")[0];
     var var_o_script = document.createElement("script");
     var_o_script.type = "text/javascript";
-    var_o_script.src = var_s_path + "?v=" + this.var_s_version;
     
-    if (var_o_script.readyState) { // IE Legacy
+    var var_s_fullPath = (var_s_path.indexOf("http") === 0) ? var_s_path : this.const_S_BASE + var_s_path;
+    var_o_script.src = var_s_fullPath + "?v=" + this.var_s_version;
+    
+    // Gestione onload IE6...
+    if (var_o_script.readyState) {
         var_o_script.onreadystatechange = function() {
             if (var_o_script.readyState == "loaded" || var_o_script.readyState == "complete") {
                 var_o_script.onreadystatechange = null;
@@ -107,7 +132,6 @@ window.Objectis.importModule = function(var_s_path, var_s_compName) {
             if (var_s_compName) var_o_self.var_a_loadingQueue[var_s_compName] = "loaded";
         };
     }
-    
     var_o_head.appendChild(var_o_script);
 };
 

@@ -14,3 +14,12 @@ html, body {
     font-family: sans-serif;
     font-size: 10pt;
 }
+
+
+/* BLOG START */
+#main-viewport { padding: 20px; background: #f0f0f0; }
+.title-header { font-size: 24px; font-weight: bold; border-bottom: 2px solid #333; margin-bottom: 20px; }
+.post-content { background: #fff; border: 1px solid #ccc; padding: 15px; }
+.post-date { font-style: italic; color: #666; font-size: 11px; }
+.post-author { text-align: right; font-weight: bold; margin-top: 10px; }
+/* BLOG STOP */
