@@ -8,18 +8,24 @@
     right: 0;
     width: 12px;
     height: 100%;
-    background: #222;
-    border-left: 1px solid #333;
+    background: #eee;
+    border: none;
     z-index: 9999;
+
+    padding:0px;
+    margin:0px;
 }
 
 .obj-scrollbar-thumb {
     position: absolute;
-    left: 2px;
-    width: 8px;
-    background: #888;
-    border: 1px solid #aaa;
-    cursor: pointer;
+    left: 0px;
+    width: 100%;
+    background: red;
+    border: none;
+    cursor: default;
+
+    padding:0px;
+    margin:0px;
 }
 
 /* Fix per evitare che il contenuto finisca SOTTO la barra */
