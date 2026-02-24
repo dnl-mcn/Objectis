@@ -7,14 +7,17 @@
 .obj-layout-row {
     width: 100%;
     clear: both;
-    zoom: 1; /* IE6 HasLayout */
+    overflow: hidden; 
+    zoom: 1; /* Trigger hasLayout per IE6 */
     display: block;
     margin: 0;
+    position: relative;
 
 
     background: #fff;
     color:#333;
 }
+
 
 .obj-layout-row:after {
     content: ".";
@@ -26,15 +29,19 @@
 
 /* Colonna: simula <td> */
 .obj-layout-col {
+    height: 100%;
     float: left;
+    overflow: hidden; 
     margin: 0;
     padding: 0;
     zoom: 1;
-    overflow: hidden;
     min-height: 1px;
+    position: relative;
 }
 
 /* Classi proporzionali */
+.obj-layout-col-1 { width: 1%; }
+.obj-layout-col-5 { width: 5%; }
 .obj-layout-col-10 { width: 10%; }
 .obj-layout-col-20 { width: 20%; }
 .obj-layout-col-25 { width: 25%; }
@@ -43,5 +50,25 @@
 .obj-layout-col-66 { width: 66.66%; }
 .obj-layout-col-75 { width: 75%; }
 .obj-layout-col-100 { width: 100%; }
+
+.obj-layout-col-expand { 
+    width: auto; /* Verrà sovrascritto dal JS */
+}
+
+/* Classi proporzionali */
+.obj-layout-row-1 { height: 1%; }
+.obj-layout-row-1 { height: 5%; }
+.obj-layout-row-10 { height: 10%; }
+.obj-layout-row-20 { height: 20%; }
+.obj-layout-row-25 { height: 25%; }
+.obj-layout-row-33 { height: 33.33%; }
+.obj-layout-row-50 { height: 50%; }
+.obj-layout-row-66 { height: 66.66%; }
+.obj-layout-row-75 { height: 75%; }
+.obj-layout-row-100 { height: 100%; }
+
+.obj-layout-row-expand { 
+    height: auto; /* Verrà sovrascritto dal JS */
+}
 
 .obj-valign-middle { vertical-align: middle; }

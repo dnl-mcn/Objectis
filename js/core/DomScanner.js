@@ -1,7 +1,7 @@
 /**
  * @file DomScanner.js
- * @description Scanner DOM JIT - Gestione on-demand di layout e componenti.
- * @version 1.3.1
+ * @description Scanner DOM JIT - Fix chiamata setEvents.
+ * @version 1.4.1
  */
 
 (function(var_o_root) {
@@ -46,12 +46,23 @@
                     // Regola: deve iniziare con il prefisso
                     if (var_s_name.indexOf(var_s_prefix) === 0) {
                         
-                        // ECCEZIONE LAYOUT: Se è un elemento di layout, carica il CSS ma non cercare JS
+                        // ECCEZIONE LAYOUT: Gestione colonne e griglie
                         if (var_s_name.indexOf("obj-layout-") === 0) {
+                            
+                            // Gestione specifica per colonne espandibili
+                            if (var_s_name === "obj-layout-col-expand") {
+                                // Segnaliamo al sistema che questo elemento richiederà un calcolo dinamico
+                                var_o_el._obj_is_expand = true;
+                            }
+
                             if (this.var_a_loadingQueue["layout"] !== "loaded") {
                                 this.var_a_loadingQueue["layout"] = "loaded";
+                                // Carichiamo il CSS del layout e il modulo JS del Layout se non presente
                                 this.importStyle("css/layout.css");
-                                this.log("Rilevato layout: iniezione layout.css", "SYSTEM");
+                                if (typeof this.Layout === "undefined") {
+                                    this.importModule("js/core/Layout.js", "Layout");
+                                }
+                                this.log("Rilevato layout: iniezione layout.css e core/Layout.js", "SYSTEM");
                             }
                             continue; // Non procedere con il controllo componenti JS per il layout
                         }
@@ -112,12 +123,14 @@
                                         var_o_instance.init();
                                     }
                                 } catch (var_o_err) {
-                                    this.log("Errore critico in " + var_s_compName + ": " + (var_o_err.message || "Unknown Error"), "ERROR");
+                                    this.log("Errore in " + var_s_compName + ": " + var_o_err.message, "ERROR");
                                 }
                             }
                             
-                            // Chiamata centralizzata al gestore eventi (camelCase come richiesto)
-                            this.setEvents();
+                            // FIX: Chiamata sicura al gestore eventi
+                            if (typeof this.setEvents === "function") {
+                                this.setEvents();
+                            }
                         }
                     }
                 }
@@ -128,9 +141,9 @@
             setTimeout(function() { var_o_self.scan(); }, 1000);
         } else {
             // Se non ci sono più pendenti, il framework è "stabile"
-            // Lanciamo il ricalcolo layout con un micro-delay per il rendering IE
-            if (typeof this.Layout !== "undefined" && typeof this.Layout.fixHeights === "function") {
-                setTimeout(function() { var_o_self.Layout.fixHeights(); }, 50);
+            // Lanciamo il ricalcolo layout con supporto per colonne expand
+            if (typeof this.Layout !== "undefined" && typeof this.Layout.fixLayout === "function") {
+                setTimeout(function() { var_o_self.Layout.fixLayout(); }, 50);
             }
             this.log("Scansione completata e layout stabilizzato.", "SYSTEM");
         }

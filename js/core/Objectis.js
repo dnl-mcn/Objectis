@@ -1,62 +1,81 @@
 /**
  * @file Objectis.js
- * @description Core Framework v1.7.5 - Fix caricamento CSS strutturali.
- * @version 1.7.5
+ * @description Core Framework v1.7.8 - Aggiunta gestione setEvents.
+ * @version 1.7.8
  */
 
 if (typeof window.Objectis === "undefined") {
     window.Objectis = {
         var_a_components: {},
         const_B_DEBUG: true,
-        var_s_version: "1.7.5",
+        var_s_version: "1.7.8",
         var_b_isBooting: false,
         var_b_isReady: false,
         var_a_loadingQueue: {},
         var_n_bootRetries: 0,
-        const_S_BASE: "" // Verrà popolata al boot
+        const_S_BASE: "", // Verrà popolata al boot
+        var_s_logicPath: "js/script.js" // Default se non specificato
     };
 }
 
 /**
- * @method getBasePath
- * @description Determina la root del progetto in modo robusto.
+ * @method setEvents
+ * @description Gestore centralizzato degli eventi globali.
  */
-window.Objectis.getBasePath = function() {
+window.Objectis.setEvents = function() {
+    // Implementazione futura per eventi delegati globali
+    // Per ora funge da entry point richiesto dal DomScanner
+    if (this.const_B_DEBUG) {
+        // this.log("SetEvents richiamato", "SYSTEM");
+    }
+};
+
+window.Objectis.getBasePathAndLogic = function() {
     var var_a_scripts = document.getElementsByTagName("script");
-    var var_s_path = "";
     for (var var_n_i = 0; var_n_i < var_a_scripts.length; var_n_i++) {
-        var var_s_src = var_a_scripts[var_n_i].src;
+        var var_o_script = var_a_scripts[var_n_i];
+        var var_s_src = var_o_script.src || "";
+        
+        // Cerchiamo il tag che carica il kernel
         if (var_s_src.indexOf("js/core/Objectis.js") !== -1) {
-            var_s_path = var_s_src.split("js/core/Objectis.js")[0];
+            // 1. Calcolo Base Path
+            var var_s_base = var_s_src.split("js/core/Objectis.js")[0];
+            if (var_s_base !== "" && var_s_base.substr(var_s_base.length - 1) !== "/") {
+                var_s_base += "/";
+            }
+            this.const_S_BASE = var_s_base;
+
+            // 2. Logic Parsing (HTML 4.01 Strict Friendly)
+            // Legge il testo tra <script> e </script> per trovare "logic: percorso/file.js"
+            var var_s_content = var_o_script.text || var_o_script.innerHTML || "";
+            if (var_s_content.indexOf("logic:") !== -1) {
+                // Estraiamo il percorso dopo 'logic:' fino a fine riga o punto e virgola
+                var var_s_rawPath = var_s_content.split("logic:")[1].split("\n")[0].split(";")[0];
+                // Pulizia spazi bianchi (trim manuale per IE6)
+                this.var_s_logicPath = var_s_rawPath.replace(/^\s+|\s+$/g, "");
+            }
             break;
         }
     }
-    // Assicura che il percorso finisca con /
-    if (var_s_path !== "" && var_s_path.substr(var_s_path.length - 1) !== "/") {
-        var_s_path += "/";
-    }
-    return var_s_path;
 };
 
 /**
  * @method init
- * Inizializza il framework e carica i moduli core + la logica script.js.
+ * Inizializza il framework e carica i moduli core + la logica rilevata.
  */
 window.Objectis.init = function() {
     var var_o_self = this;
     if (this.var_b_isReady) return;
 
-    // Rilevamento base al primo avvio
+    // Rilevamento base e logica al primo avvio
     if (this.const_S_BASE === "") {
-        this.const_S_BASE = this.getBasePath();
+        this.getBasePathAndLogic();
     }
-
-    // Verifica la presenza dei moduli core fondamentali
-    if (typeof this.scan !== "function" || typeof this.getParam !== "function") {
+    if (typeof this.scan !== "function") {
         if (!this.var_b_isBooting) {
             this.var_b_isBooting = true;
             
-            // 1. CARICAMENTO CSS STRUTTURALI (Layout e Default)
+            // 1. CARICAMENTO CSS STRUTTURALI
             this.importStyle("css/style.css");
 
             // 2. CARICAMENTO MODULI CORE
@@ -64,11 +83,13 @@ window.Objectis.init = function() {
             this.importModule("js/core/DomScanner.js", "DomScanner");
             this.importModule("js/core/Ajax.js", "Ajax");
             this.importModule("js/core/Data.js", "Data");
-            this.importModule("js/script.js", "script");
+            
+            // Carica la logica specifica rilevata dal tag script
+            this.importModule(this.var_s_logicPath, "script");
         }
         
         this.var_n_bootRetries++;
-        // KILL-SWITCH Boot: 40 tentativi (circa 4 secondi), poi stacca tutto
+        // KILL-SWITCH Boot: 40 tentativi (circa 4 secondi)
         if (this.var_n_bootRetries > 40) return;
 
         setTimeout(function() { var_o_self.init(); }, 100);
@@ -77,7 +98,7 @@ window.Objectis.init = function() {
 
     // Se i file core sono presenti, dichiariamo il framework pronto
     this.var_b_isReady = true;
-    this.log("Objectis Ready. Base: " + this.const_S_BASE, "SYSTEM");
+    this.log("Objectis Ready. Logic: " + this.var_s_logicPath, "SYSTEM");
     this.scan(); 
 };
 

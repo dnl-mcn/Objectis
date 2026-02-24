@@ -1,0 +1,33 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+    <head>
+        <title>Objectis Framework - Dettaglio Post</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    </head>
+    <body>
+        <div id="main-viewport">
+            <div class="obj-layout-col obj-layout-col-25"></div>
+            
+            <div class="obj-layout-col obj-layout-col-50">
+                <div class="obj-data-bind" id="post-detail-container">
+                    <h1>obj-data-title</h1>
+                    <p><strong>Autore:</strong> obj-data-author | <strong>Data:</strong> obj-data-date</p>
+                    <div style="padding: 20px; border: 1px solid #ccc; background: #f9f9f9;">
+                        obj-data-content
+                    </div>
+                </div>
+
+                <ul style="margin-top: 20px;">
+                    <li><a href="posts.html">Torna alla lista post</a></li>
+                    <li><a href="../index.html">Torna alla Home</a></li>
+                </ul>
+            </div>
+
+            <div class="obj-layout-col obj-layout-col-25"></div>
+        </div>
+
+        <script type="text/javascript" src="../js/core/Objectis.js">
+            logic: samples/post.js;
+        </script>
+    </body>
+</html>

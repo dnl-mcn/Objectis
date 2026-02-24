@@ -6,17 +6,20 @@
     </head>
     <body>
         <div id="main-viewport">
-            <div class="obj-layout-row obj-data-bind title-header">obj-data-title</div>
-
             <div class="obj-layout-col obj-layout-col-25"></div>
-            <div class="obj-layout-col obj-layout-col-50 post-content">
+            <div class="obj-layout-col obj-layout-col-50">
+            <div class="obj-layout-row obj-data-bind title-header">obj-data-title</div>
                 <div class="obj-layout-row obj-data-bind">obj-data-title</div>
-                <div class="obj-layout-row obj-data-bind">obj-data-post</div>
+                <div class="obj-layout-row obj-data-bind post-content">obj-data-post</div>
                 <div class="obj-layout-row obj-data-bind post-date">obj-data-date, obj-data-author</div>
+                <ul>
+                    <li><a href="../index.html">Index</a></li>
+                    <li><a href="./posts.html">lista post</a></li>
+                </ul>
             </div>
             <div class="obj-layout-col obj-layout-col-25"></div>
 
         </div>
-        <script type="text/javascript" src="../js/core/Objectis.js"></script>
+        <script type="text/javascript" src="../js/core/Objectis.js">logic: samples/blog.js;</script>
     </body>
 </html>

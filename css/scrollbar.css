@@ -1,0 +1,28 @@
+.obj-scrollbar-content {
+    /* Ora gestito via JS come absolute */
+}
+
+.obj-scrollbar-track {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 12px;
+    height: 100%;
+    background: #222;
+    border-left: 1px solid #333;
+    z-index: 9999;
+}
+
+.obj-scrollbar-thumb {
+    position: absolute;
+    left: 2px;
+    width: 8px;
+    background: #888;
+    border: 1px solid #aaa;
+    cursor: pointer;
+}
+
+/* Fix per evitare che il contenuto finisca SOTTO la barra */
+.obj-scrollbar-content .post-item {
+    margin-right: 15px;
+}
