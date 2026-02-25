@@ -1,7 +1,7 @@
 /**
  * @file DomScanner.js
- * @description Scanner DOM JIT - Fix chiamata setEvents.
- * @version 1.4.1
+ * @description Scanner DOM JIT - Gestione on-demand di Ajax e Data.
+ * @version 1.4.2
  */
 
 (function(var_o_root) {
@@ -14,6 +14,29 @@
 
     var_o_root.Objectis.scan = function() {
         var var_o_self = this;
+
+        // --- CHECK ON-DEMAND CORE MODULES ---
+        // Se la logica tenta di caricare post ma Ajax non c'è, lo iniettiamo
+        if (typeof this.Ajax === "undefined" && this.var_a_loadingQueue["Ajax"] !== "loading") {
+            // Verifichiamo se qualche script o componente ha bisogno di Ajax
+            // In questo caso, lo carichiamo se esiste la funzione loadPosts o simili nella logica
+            if (this.loadPosts || this.var_s_logicPath.indexOf("posts") !== -1) {
+                this.var_a_loadingQueue["Ajax"] = "loading";
+                this.importModule("js/core/Ajax.js", "Ajax");
+                this.log("Iniezione JIT: Ajax.js richiesto dalla logica.", "SYSTEM");
+            }
+        }
+
+        // Se abbiamo elementi con attributi data- o se usiamo binding, iniettiamo Data.js
+        if (typeof this.Data === "undefined" && this.var_a_loadingQueue["Data"] !== "loading") {
+            var var_a_binds = document.querySelectorAll ? document.querySelectorAll('[class*="obj-"]') : [];
+            if (var_a_binds.length > 0 || this.loadPosts) {
+                this.var_a_loadingQueue["Data"] = "loading";
+                this.importModule("js/core/Data.js", "Data");
+                this.log("Iniezione JIT: Data.js richiesto per binding.", "SYSTEM");
+            }
+        }
+
         var var_a_liveElements = document.getElementsByTagName("*");
         var var_a_staticElements = [];
         
@@ -26,14 +49,16 @@
         var var_s_prefix = "obj-";
         var var_b_pending = false;
 
+        // Se Ajax o Data stanno caricando, consideriamo 'pending' per ri-scansionare dopo
+        if (this.var_a_loadingQueue["Ajax"] === "loading" || this.var_a_loadingQueue["Data"] === "loading") {
+            var_b_pending = true;
+        }
+
         for (var var_n_i = 0; var_n_i < var_a_staticElements.length; var_n_i++) {
             var var_o_el = var_a_staticElements[var_n_i];
             
             // FIX IE: Ignora i nodi commento o testo
-            if (!var_o_el || var_o_el.nodeType !== 1) continue;
-
-            // Usiamo una proprietà diretta sul nodo (invece di getAttribute) per solidità cross-browser
-            if (var_o_el._obj_init === true) continue;
+            if (!var_o_el || var_o_el.nodeType !== 1 || var_o_el._obj_init === true) continue;
 
             var var_s_class = var_o_el.className;
             
@@ -48,13 +73,6 @@
                         
                         // ECCEZIONE LAYOUT: Gestione colonne e griglie
                         if (var_s_name.indexOf("obj-layout-") === 0) {
-                            
-                            // Gestione specifica per colonne espandibili
-                            if (var_s_name === "obj-layout-col-expand") {
-                                // Segnaliamo al sistema che questo elemento richiederà un calcolo dinamico
-                                var_o_el._obj_is_expand = true;
-                            }
-
                             if (this.var_a_loadingQueue["layout"] !== "loaded") {
                                 this.var_a_loadingQueue["layout"] = "loaded";
                                 // Carichiamo il CSS del layout e il modulo JS del Layout se non presente
@@ -82,23 +100,8 @@
 
                         // Controllo rigoroso contro i loop: se è 'undefined', il modulo non esiste ANCORA in memoria
                         if (typeof this[var_s_compName] === "undefined") {
-                            
-                            // Inizializza contatore tentativi
-                            if (typeof this.var_a_retryCount[var_s_compName] === "undefined") {
-                                this.var_a_retryCount[var_s_compName] = 0;
-                            }
-
-                            // KILL-SWITCH: Dopo 3 tentativi ignoriamo il modulo per sempre
-                            if (this.var_a_retryCount[var_s_compName] >= 3) {
-                                this.log("Modulo " + var_s_compName + " abortito.", "ERROR");
-                                this[var_s_compName] = false; 
-                                continue;
-                            }
-
                             if (this.var_a_loadingQueue[var_s_compName] !== "loading") {
                                 this.var_a_loadingQueue[var_s_compName] = "loading";
-                                this.var_a_retryCount[var_s_compName]++;
-                                
                                 this.importStyle("css/" + var_s_compName + ".css");
                                 // Passiamo il nome componente a importModule per mappare gli errori
                                 this.importModule("js/ui/" + var_s_compName + ".js", var_s_compName);
@@ -123,7 +126,7 @@
                                         var_o_instance.init();
                                     }
                                 } catch (var_o_err) {
-                                    this.log("Errore in " + var_s_compName + ": " + var_o_err.message, "ERROR");
+                                    this.log("Errore: " + var_o_err.message, "ERROR");
                                 }
                             }
                             
@@ -138,7 +141,7 @@
         }
 
         if (var_b_pending) {
-            setTimeout(function() { var_o_self.scan(); }, 1000);
+            setTimeout(function() { var_o_self.scan(); }, 100); // 100ms è sufficiente per il re-check
         } else {
             // Se non ci sono più pendenti, il framework è "stabile"
             // Lanciamo il ricalcolo layout con supporto per colonne expand

@@ -1,14 +1,14 @@
 /**
  * @file Objectis.js
- * @description Core Framework v1.7.8 - Aggiunta gestione setEvents.
- * @version 1.7.8
+ * @description Core Framework v1.7.9 - On-demand module loading logic.
+ * @version 1.7.9
  */
 
 if (typeof window.Objectis === "undefined") {
     window.Objectis = {
         var_a_components: {},
         const_B_DEBUG: true,
-        var_s_version: "1.7.8",
+        var_s_version: "1.7.9",
         var_b_isBooting: false,
         var_b_isReady: false,
         var_a_loadingQueue: {},
@@ -71,6 +71,8 @@ window.Objectis.init = function() {
     if (this.const_S_BASE === "") {
         this.getBasePathAndLogic();
     }
+
+    // Carichiamo SOLO lo scanner, che è il motore di ricerca dei bisogni
     if (typeof this.scan !== "function") {
         if (!this.var_b_isBooting) {
             this.var_b_isBooting = true;
@@ -81,10 +83,8 @@ window.Objectis.init = function() {
             // 2. CARICAMENTO MODULI CORE
             this.importModule("js/core/Dom.js", "Dom");
             this.importModule("js/core/DomScanner.js", "DomScanner");
-            this.importModule("js/core/Ajax.js", "Ajax");
-            this.importModule("js/core/Data.js", "Data");
             
-            // Carica la logica specifica rilevata dal tag script
+            // La logica viene caricata subito perché è lei a dettare cosa serve
             this.importModule(this.var_s_logicPath, "script");
         }
         
@@ -98,7 +98,7 @@ window.Objectis.init = function() {
 
     // Se i file core sono presenti, dichiariamo il framework pronto
     this.var_b_isReady = true;
-    this.log("Objectis Ready. Logic: " + this.var_s_logicPath, "SYSTEM");
+    this.log("Objectis Ready. JIT Modules enabled.", "SYSTEM");
     this.scan(); 
 };
 
