@@ -1,20 +1,21 @@
 /**
  * @file Objectis.js
- * @description Core Framework v1.8.1 - Gestione visibilità post-boot.
- * @version 1.8.1
+ * @description Core Framework v1.8.2 - Gestione visibilità con Fail-Safe Timeout.
+ * @version 1.8.2
  */
 
 if (typeof window.Objectis === "undefined") {
     window.Objectis = {
         var_a_components: {},
         const_B_DEBUG: true,
-        var_s_version: "1.8.1",
+        var_s_version: "1.8.2",
         var_b_isBooting: false,
         var_b_isReady: false,
         var_a_loadingQueue: {},
         var_n_bootRetries: 0,
-        const_S_BASE: "", // Verrà popolata al boot
-        var_s_logicPath: "js/script.js" // Default se non specificato
+        const_S_BASE: "", 
+        var_s_logicPath: "js/script.js",
+        var_n_safetyTimer: null // Riferimento per il timeout di sicurezza
     };
 }
 
@@ -60,8 +61,28 @@ window.Objectis.getBasePathAndLogic = function() {
 };
 
 /**
+ * @method unlockDisplay
+ * @description Sblocca la visibilità della pagina forzatamente.
+ */
+window.Objectis.unlockDisplay = function(var_b_isError) {
+    if (this.var_n_safetyTimer) {
+        clearTimeout(this.var_n_safetyTimer);
+        this.var_n_safetyTimer = null;
+    }
+    
+    if (document.body && document.body.className.indexOf("obj-ready") === -1) {
+        document.body.className += " obj-ready";
+        if (var_b_isError) {
+            this.log("Timeout sicurezza: sblocco forzato della pagina (possibile errore dati).", "WARNING");
+        } else {
+            this.log("Pagina visibile (layout stabilizzato).", "SYSTEM");
+        }
+    }
+};
+
+/**
  * @method init
- * Inizializza il framework e gestisce la transizione di visibilità.
+ * Inizializza il framework e avvia il timer di sicurezza.
  */
 window.Objectis.init = function() {
     var var_o_self = this;
@@ -72,8 +93,14 @@ window.Objectis.init = function() {
         this.getBasePathAndLogic();
     }
 
-    // MODIFICA: Verifichiamo la presenza dello scanner e di Ajax prima di dichiarare il boot completato.
-    // Se posts.js chiama Objectis.Ajax.get, Ajax DEVE essere presente.
+    // MODIFICA: Avviamo il timer di sicurezza al primo tentativo di boot se non esiste
+    if (!this.var_n_safetyTimer) {
+        this.var_n_safetyTimer = setTimeout(function() {
+            var_o_self.unlockDisplay(true);
+        }, 5000); // 5 secondi di tolleranza
+    }
+
+    // Controllo dipendenze core
     if (typeof this.scan !== "function" || (this.var_s_logicPath.indexOf("posts.js") !== -1 && typeof this.Ajax === "undefined")) {
         if (!this.var_b_isBooting) {
             this.var_b_isBooting = true;
@@ -114,13 +141,9 @@ window.Objectis.init = function() {
     
     this.scan(); 
     
-    // MODIFICA: Applichiamo la visibilità dopo un brevissimo delay per assicurarci 
-    // che il primo ciclo di layout sia concluso.
+    // MODIFICA: Invece di iniettare la classe direttamente, usiamo unlockDisplay
     setTimeout(function() {
-        if (document.body) {
-            document.body.className += " obj-ready";
-            var_o_self.log("Pagina visibile (layout stabilizzato).", "SYSTEM");
-        }
+        var_o_self.unlockDisplay(false);
     }, 200);
 };
 
