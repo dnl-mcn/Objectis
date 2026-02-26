@@ -1,21 +1,22 @@
 /**
  * @file Objectis.js
- * @description Core Framework v1.8.2 - Gestione visibilità con Fail-Safe Timeout.
- * @version 1.8.2
+ * @description Core Framework v1.9.1 - Security Lockdown & Sentinel Edition.
+ * @version 1.9.1
  */
 
 if (typeof window.Objectis === "undefined") {
     window.Objectis = {
         var_a_components: {},
         const_B_DEBUG: true,
-        var_s_version: "1.8.2",
+        var_s_version: "1.9.1",
         var_b_isBooting: false,
         var_b_isReady: false,
         var_a_loadingQueue: {},
         var_n_bootRetries: 0,
         const_S_BASE: "", 
         var_s_logicPath: "js/script.js",
-        var_n_safetyTimer: null // Riferimento per il timeout di sicurezza
+        var_n_safetyTimer: null,
+        var_n_sentinelTimer: null // Timer per il monitoraggio costante
     };
 }
 
@@ -28,6 +29,87 @@ window.Objectis.setEvents = function() {
     // Per ora funge da entry point richiesto dal DomScanner
     if (this.const_B_DEBUG) {
         // this.log("SetEvents richiamato", "SYSTEM");
+    }
+};
+
+/**
+ * @method lockdown
+ * @description Esegue la pulizia di sicurezza e rimuove intrusioni esterne.
+ */
+window.Objectis.lockdown = function() {
+    this.log("Avvio lockdown di sicurezza...", "SECURITY");
+
+    // 1. RIMOZIONE COOKIE (Direttiva: Niente Cookie)
+    if (document.cookie && document.cookie !== "") {
+        var var_a_cookies = document.cookie.split(";");
+        for (var var_n_c = 0; var_n_c < var_a_cookies.length; var_n_c++) {
+            var var_s_cookie = var_a_cookies[var_n_c];
+            var var_n_eqPos = var_s_cookie.indexOf("=");
+            var var_s_name = var_n_eqPos > -1 ? var_s_cookie.substr(0, var_n_eqPos) : var_s_cookie;
+            var_s_name = var_s_name.replace(/^\s+|\s+$/g, ""); // Trim
+            document.cookie = var_s_name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+        }
+    }
+
+    // 2. RIMOZIONE RISORSE ESTERNE (Sanificazione HEAD e BODY)
+    var var_o_self = this;
+    var var_f_clean = function(var_s_tagName, var_s_attr) {
+        var var_a_els = document.getElementsByTagName(var_s_tagName);
+        // Ciclo inverso per evitare problemi di indice durante la rimozione
+        for (var var_n_i = var_a_els.length - 1; var_n_i >= 0; var_n_i--) {
+            var var_o_el = var_a_els[var_n_i];
+            var var_s_src = var_o_el[var_s_attr] || var_o_el.getAttribute(var_s_attr) || "";
+            
+            // Logica di esclusione: deve appartenere alla nostra BASE o essere il core
+            var var_b_isLocal = (var_s_src.indexOf(var_o_self.const_S_BASE) !== -1);
+            var var_b_isCore = (var_s_src.indexOf("Objectis.js") !== -1);
+            
+            if (var_s_src !== "" && !var_b_isLocal && !var_b_isCore) {
+                if (var_o_el.parentNode) {
+                    var_o_el.parentNode.removeChild(var_o_el);
+                    if (var_o_self.const_B_DEBUG) {
+                        var_o_self.log("Rimosso elemento non autorizzato: " + var_s_src, "SECURITY");
+                    }
+                }
+            }
+        }
+    };
+
+    var_f_clean("script", "src");
+    var_f_clean("link", "href");
+};
+
+/**
+ * @method startSentinel
+ * @description Avvia un monitoraggio costante per IE6.
+ */
+window.Objectis.startSentinel = function() {
+    var var_o_self = this;
+    if (this.var_n_sentinelTimer) return;
+    
+    // Controlliamo ogni 2 secondi se qualcuno ha iniettato sporcizia
+    this.var_n_sentinelTimer = setInterval(function() {
+        var_o_self.lockdown();
+    }, 2000);
+};
+
+/**
+ * @method unlockDisplay
+ * @description Sblocca la visibilità della pagina forzatamente.
+ */
+window.Objectis.unlockDisplay = function(var_b_isError) {
+    if (this.var_n_safetyTimer) {
+        clearTimeout(this.var_n_safetyTimer);
+        this.var_n_safetyTimer = null;
+    }
+    
+    if (document.body && document.body.className.indexOf("obj-ready") === -1) {
+        document.body.className += " obj-ready";
+        if (var_b_isError) {
+            this.log("Timeout sicurezza: sblocco forzato della pagina (possibile errore dati).", "WARNING");
+        } else {
+            this.log("Pagina visibile (layout stabilizzato).", "SYSTEM");
+        }
     }
 };
 
@@ -61,28 +143,8 @@ window.Objectis.getBasePathAndLogic = function() {
 };
 
 /**
- * @method unlockDisplay
- * @description Sblocca la visibilità della pagina forzatamente.
- */
-window.Objectis.unlockDisplay = function(var_b_isError) {
-    if (this.var_n_safetyTimer) {
-        clearTimeout(this.var_n_safetyTimer);
-        this.var_n_safetyTimer = null;
-    }
-    
-    if (document.body && document.body.className.indexOf("obj-ready") === -1) {
-        document.body.className += " obj-ready";
-        if (var_b_isError) {
-            this.log("Timeout sicurezza: sblocco forzato della pagina (possibile errore dati).", "WARNING");
-        } else {
-            this.log("Pagina visibile (layout stabilizzato).", "SYSTEM");
-        }
-    }
-};
-
-/**
  * @method init
- * Inizializza il framework e avvia il timer di sicurezza.
+ * Inizializza il framework e avvia la sentinella.
  */
 window.Objectis.init = function() {
     var var_o_self = this;
@@ -93,7 +155,12 @@ window.Objectis.init = function() {
         this.getBasePathAndLogic();
     }
 
-    // MODIFICA: Avviamo il timer di sicurezza al primo tentativo di boot se non esiste
+    // MODIFICA: Eseguiamo il lockdown immediatamente dopo aver trovato la BASE
+    if (!this.var_b_isBooting) {
+        this.lockdown();
+        this.startSentinel(); // Avvio sentinella periodica
+    }
+
     if (!this.var_n_safetyTimer) {
         this.var_n_safetyTimer = setTimeout(function() {
             var_o_self.unlockDisplay(true);
