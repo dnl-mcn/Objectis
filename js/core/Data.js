@@ -1,7 +1,7 @@
 /**
  * @file Data.js
  * @description Gestore Data Binding - Supporta liste, placeholder negli attributi e caricamento on-demand.
- * @version 1.0.9
+ * @version 1.1.1
  */
 
 (function(var_o_root) {
@@ -39,16 +39,16 @@
 
             // FASE 2: Caricamento Lazy di TimeEngine se necessario
             if (var_b_needsTime && typeof Objectis.formatDate === "undefined") {
-                Objectis.log("Rilevata chiave 'date'. Caricamento on-demand di TimeEngine.js...", "SYSTEM");
+                if (!Objectis.var_a_loadingQueue) Objectis.var_a_loadingQueue = {};
+                if (Objectis.var_a_loadingQueue["TimeEngine"] !== "loading") {
+                    Objectis.log("Rilevata chiave 'date'. Caricamento on-demand di TimeEngine.js...", "SYSTEM");
+                    Objectis.var_a_loadingQueue["TimeEngine"] = "loading";
+                    Objectis.importModule("js/core/TimeEngine.js", "TimeEngine");
+                }
                 
-                Objectis.importModule("js/core/TimeEngine.js", "TimeEngine");
-                
-                // Attendiamo il caricamento prima di procedere (ricorsione controllata)
-                var var_n_wait = setInterval(function() {
-                    if (typeof Objectis.formatDate === "function") {
-                        clearInterval(var_n_wait);
-                        var_o_self.bind(var_v_dataset);
-                    }
+                // MODIFICA: Utilizzo di setTimeout invece di setInterval per una ricorsione più sicura.
+                setTimeout(function() {
+                    var_o_self.bind(var_v_dataset);
                 }, 50);
                 return; // Interrompiamo l'esecuzione corrente
             }
@@ -56,14 +56,19 @@
             // FASE 3: Esecuzione Binding Reale
             
             // --- LOGICA A: GESTIONE LISTE (ARRAY) ---
-            if (var_v_dataset instanceof Array || (typeof var_v_dataset.length === "number")) {
+            if (var_v_dataset instanceof Array || (var_v_dataset && typeof var_v_dataset.length === "number")) {
                 for (var var_n_i = 0; var_n_i < var_a_elements.length; var_n_i++) {
                     var var_o_container = var_a_elements[var_n_i];
                     var var_s_className = var_o_container.className || "";
                     
                     // Cerchiamo la classe che identifica la lista (es. obj-data-list-posts)
                     if (var_s_className.indexOf("obj-data-list-") !== -1) {
-                        var var_s_tpl = var_o_container.innerHTML;
+                        // MODIFICA: Salviamo il template originale in una proprietà per permettere refresh infiniti.
+                        if (!var_o_container._obj_tpl) {
+                            var_o_container._obj_tpl = var_o_container.innerHTML;
+                        }
+                        
+                        var var_s_tpl = var_o_container._obj_tpl;
                         var var_s_finalHtml = "";
 
                         for (var var_n_j = 0; var_n_j < var_v_dataset.length; var_n_j++) {
@@ -104,26 +109,30 @@
                     
                     // Verifichiamo se l'elemento ha la classe obj-data-bind
                     if (var_o_el.className && var_o_el.className.indexOf("obj-data-bind") !== -1) {
-                        var var_s_newHtml = var_o_el.innerHTML;
+                        // MODIFICA: Aggiunto supporto per tag input e textarea.
+                        var var_b_isInput = (var_o_el.tagName.toLowerCase() === "input" || var_o_el.tagName.toLowerCase() === "textarea");
+                        var var_s_content = var_b_isInput ? var_o_el.value : var_o_el.innerHTML;
+                        
                         var_re_pattern.lastIndex = 0;
-
-                        // Cerchiamo tutti i match nel contenuto del tag
-                        while ((var_a_match = var_re_pattern.exec(var_o_el.innerHTML)) !== null) {
-                            var var_s_key = var_a_match[1];
+                        var var_a_m;
+                        while ((var_a_m = var_re_pattern.exec(var_s_content)) !== null) {
+                            var var_s_key = var_a_m[1];
                             if (typeof var_v_dataset[var_s_key] !== "undefined") {
                                 var var_v_val = var_v_dataset[var_s_key];
                                 if (var_s_key === "date" && typeof var_v_val === "number" && Objectis.formatDate) {
                                     var_v_val = Objectis.formatDate(var_v_val);
                                 }
-                                var_s_newHtml = var_s_newHtml.replace(var_a_match[0], var_v_val);
+                                var_s_content = var_s_content.replace(var_a_m[0], var_v_val);
                             }
                         }
-                        var_o_el.innerHTML = var_s_newHtml;
+                        
+                        if (var_b_isInput) var_o_el.value = var_s_content;
+                        else var_o_el.innerHTML = var_s_content;
                     }
                 }
             }
             
-            Objectis.log("Data Binding completato con successo.", "DATA");
+            Objectis.log("Data Binding completato.", "DATA");
 
             if (Objectis.Layout && typeof Objectis.Layout.fixHeights === "function") {
                 Objectis.Layout.fixHeights();

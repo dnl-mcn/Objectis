@@ -1,14 +1,14 @@
 /**
  * @file Objectis.js
- * @description Core Framework v1.7.9 - On-demand module loading logic.
- * @version 1.7.9
+ * @description Core Framework v1.8.1 - Gestione visibilità post-boot.
+ * @version 1.8.1
  */
 
 if (typeof window.Objectis === "undefined") {
     window.Objectis = {
         var_a_components: {},
         const_B_DEBUG: true,
-        var_s_version: "1.7.9",
+        var_s_version: "1.8.1",
         var_b_isBooting: false,
         var_b_isReady: false,
         var_a_loadingQueue: {},
@@ -61,7 +61,7 @@ window.Objectis.getBasePathAndLogic = function() {
 
 /**
  * @method init
- * Inizializza il framework e carica i moduli core + la logica rilevata.
+ * Inizializza il framework e gestisce la transizione di visibilità.
  */
 window.Objectis.init = function() {
     var var_o_self = this;
@@ -72,8 +72,9 @@ window.Objectis.init = function() {
         this.getBasePathAndLogic();
     }
 
-    // Carichiamo SOLO lo scanner, che è il motore di ricerca dei bisogni
-    if (typeof this.scan !== "function") {
+    // MODIFICA: Verifichiamo la presenza dello scanner e di Ajax prima di dichiarare il boot completato.
+    // Se posts.js chiama Objectis.Ajax.get, Ajax DEVE essere presente.
+    if (typeof this.scan !== "function" || (this.var_s_logicPath.indexOf("posts.js") !== -1 && typeof this.Ajax === "undefined")) {
         if (!this.var_b_isBooting) {
             this.var_b_isBooting = true;
             
@@ -84,8 +85,9 @@ window.Objectis.init = function() {
             this.importModule("js/core/Dom.js", "Dom");
             this.importModule("js/core/DomScanner.js", "DomScanner");
             
-            // La logica viene caricata subito perché è lei a dettare cosa serve
-            this.importModule(this.var_s_logicPath, "script");
+            // MODIFICA: Ajax viene caricato come modulo core se rileviamo una logica complessa 
+            // o se lo scanner lo richiederà. Per sicurezza lo carichiamo qui per prevenire undefined.
+            this.importModule("js/core/Ajax.js", "Ajax");
         }
         
         this.var_n_bootRetries++;
@@ -96,15 +98,35 @@ window.Objectis.init = function() {
         return;
     }
 
-    // Se i file core sono presenti, dichiariamo il framework pronto
+    // Se i moduli core sono pronti, carichiamo la logica della pagina (posts.js)
+    // solo se non è già stata caricata.
+    if (this.var_a_loadingQueue["script"] !== "loaded") {
+        this.importModule(this.var_s_logicPath, "script");
+        
+        // Attendiamo un ultimo ciclo per posts.js
+        setTimeout(function() { var_o_self.init(); }, 50);
+        return;
+    }
+
+    // MODIFICA: Il framework è pronto tecnicamente, ma aspettiamo lo scan per mostrare il body.
     this.var_b_isReady = true;
-    this.log("Objectis Ready. JIT Modules enabled.", "SYSTEM");
+    this.log("Objectis Ready. Esecuzione scanner...", "SYSTEM");
+    
     this.scan(); 
+    
+    // MODIFICA: Applichiamo la visibilità dopo un brevissimo delay per assicurarci 
+    // che il primo ciclo di layout sia concluso.
+    setTimeout(function() {
+        if (document.body) {
+            document.body.className += " obj-ready";
+            var_o_self.log("Pagina visibile (layout stabilizzato).", "SYSTEM");
+        }
+    }, 200);
 };
 
 /**
  * @method importStyle
- * @description Iniezione CSS con risoluzione URL assoluta.
+ * @description Iniezione CSS con risoluzione URL assoluta. (Invariata)
  */
 window.Objectis.importStyle = function(var_s_path) {
     var var_o_head = document.getElementsByTagName("head")[0];
@@ -129,7 +151,7 @@ window.Objectis.importStyle = function(var_s_path) {
 
 /**
  * @method importModule
- * Carica file Javascript in modo asincrono.
+ * Carica file Javascript in modo asincrono. (Invariata)
  */
 window.Objectis.importModule = function(var_s_path, var_s_compName) {
     var var_o_self = this;

@@ -1,7 +1,7 @@
 /**
  * @file scrollbar.js
- * @description Scrollbar UI - Aggiunta interazione mouse (Drag & Jump).
- * @version 1.4.0
+ * @description Scrollbar UI - Ottimizzazione eventi (Passive Violation Fix) e compatibilità retroattiva.
+ * @version 1.4.1
  */
 
 (function(var_o_root) {
@@ -86,7 +86,7 @@
         this.bindEvents = function() {
             var var_o_self = this;
 
-            // 1. GESTIONE ROTELLINA
+            // --- GESTIONE ROTELLINA (MODIFICATA PER VIOLATION) ---
             var var_f_handleScroll = function(var_o_e) {
                 var_o_e = var_o_e || window.event;
                 var var_n_delta = 0;
@@ -96,14 +96,32 @@
                     var_n_delta = -var_o_e.detail / 3;
                 }
                 var_o_self.scrollTo(var_o_self.var_n_currentTop + (var_n_delta * 60));
+                
+                // Impedisce lo scroll della pagina esterna mentre si usa la scrollbar interna
                 if (var_o_e.preventDefault) var_o_e.preventDefault();
                 var_o_e.returnValue = false;
                 return false;
             };
 
-            this.var_o_container.onmousewheel = var_f_handleScroll;
+            // MODIFICA: Feature detection per passive listeners (Chrome/Firefox moderni)
+            var var_b_supportsPassive = false;
+            try {
+                var var_o_opts = Object.defineProperty({}, 'passive', {
+                    get: function() { var_b_supportsPassive = true; }
+                });
+                window.addEventListener("testPassive", null, var_o_opts);
+                window.removeEventListener("testPassive", null, var_o_opts);
+            } catch (e) {}
+
+            // Applicazione evento con specifica 'passive: false' per evitare il violation
             if (this.var_o_container.addEventListener) {
-                this.var_o_container.addEventListener("DOMMouseScroll", var_f_handleScroll, false);
+                var var_v_opt = var_b_supportsPassive ? { passive: false } : false;
+                // 'mousewheel' copre Chrome/IE9+, 'DOMMouseScroll' copre vecchi Firefox
+                this.var_o_container.addEventListener("mousewheel", var_f_handleScroll, var_v_opt);
+                this.var_o_container.addEventListener("DOMMouseScroll", var_f_handleScroll, var_v_opt);
+            } else {
+                // Retrocompatibilità IE6-8
+                this.var_o_container.onmousewheel = var_f_handleScroll;
             }
 
             // 2. INIZIO DRAG SUL THUMB

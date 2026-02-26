@@ -1,7 +1,7 @@
 /**
  * @file Layout.js
- * @description Motore di rendering ricorsivo - Strategia Hard Reset per IE6.
- * @version 1.3.1
+ * @description Motore di rendering ricorsivo - Supporto IE6 Box Model e Fix visibilità font.
+ * @version 1.3.2
  */
 
 (function(var_o_root) {
@@ -21,9 +21,7 @@
             
             // Fix IE6: Debounce del resize per prevenire crash e loop infiniti
             window.onresize = function() { 
-                if (var_o_self.var_n_resizeTimer) {
-                    clearTimeout(var_o_self.var_n_resizeTimer);
-                }
+                if (var_o_self.var_n_resizeTimer) clearTimeout(var_o_self.var_n_resizeTimer);
                 var_o_self.var_n_resizeTimer = setTimeout(function() {
                     var_o_self.fixLayout();
                 }, 50);
@@ -73,13 +71,12 @@
             var var_n_totalHUsed = 0;
             var var_a_expandRows = [];
             
-            // --- HARD RESET PER IE6 ---
-            // Nascondiamo temporaneamente le righe per permettere al genitore di misurarsi correttamente
-            for (var var_n_h = 0; var_n_h < var_a_children.length; var_n_h++) {
-                var var_o_h = var_a_children[var_n_h];
-                if (var_o_h.nodeType === 1 && var_o_h.className && var_o_h.className.indexOf("obj-layout-row") !== -1) {
-                    var_o_h.style.display = "none";
-                    var_o_h.style.height = "1px";
+            // RESET SELETTIVO: Portiamo a 1px solo le righe expand per permettere lo shrink
+            // senza causare il blackout dell'intero viewport.
+            for (var var_n_res = 0; var_n_res < var_a_children.length; var_n_res++) {
+                var var_o_res = var_a_children[var_n_res];
+                if (var_o_res.nodeType === 1 && var_o_res.className && var_o_res.className.indexOf("obj-layout-row-expand") !== -1) {
+                    var_o_res.style.height = "1px";
                 }
             }
 
@@ -92,13 +89,19 @@
                 if (var_o_child && var_o_child.nodeType === 1 && var_o_child.className && var_o_child.className.indexOf("obj-layout-row") !== -1) {
                     
                     // IE6 BUG FIX: Reset font-size per permettere altezze arbitrarie
-                    var_o_child.style.display = "block";
                     var_o_child.style.zoom = "1";
                     var_o_child.style.overflow = "hidden";
-                    // Solo se non contiene testo diretto
-                    if (var_o_child.className.indexOf("obj-layout-row-no-reset") === -1) {
+                    
+                    // MODIFICA: Azzeriamo il font solo se la riga è un contenitore strutturale.
+                    // Se contiene testo (no classi obj-layout-), ripristiniamo la visibilità.
+                    var var_b_hasLayoutChildren = (var_o_child.innerHTML.indexOf("obj-layout-") !== -1);
+                    
+                    if (var_b_hasLayoutChildren && var_o_child.className.indexOf("obj-layout-row-no-reset") === -1) {
                         var_o_child.style.fontSize = "0px";
                         var_o_child.style.lineHeight = "0px";
+                    } else {
+                        var_o_child.style.fontSize = "12px";
+                        var_o_child.style.lineHeight = "normal";
                     }
 
                     var_a_rows.push(var_o_child);
@@ -114,8 +117,6 @@
                     } else if (var_o_child.className.indexOf("obj-layout-row-expand") !== -1) {
                         var_a_expandRows.push(var_o_child);
                     } else {
-                        // Per le righe auto/fixed, lasciamo che IE le misuri
-                        var_o_child.style.height = ""; 
                         var_n_totalHUsed += var_o_child.offsetHeight || 0;
                     }
                 }
@@ -156,7 +157,7 @@
                 if (var_o_child && var_o_child.nodeType === 1 && var_o_child.className && var_o_child.className.indexOf("obj-layout-col") !== -1) {
                     
                     var_o_child.style.zoom = "1";
-                    // Le colonne devono ripristinare il font-size se devono contenere testo
+                    // Le colonne contengono quasi sempre contenuto, quindi font attivo
                     var_o_child.style.fontSize = "12px"; 
                     var_o_child.style.lineHeight = "normal";
                     

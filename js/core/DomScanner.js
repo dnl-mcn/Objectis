@@ -1,7 +1,7 @@
 /**
  * @file DomScanner.js
- * @description Scanner DOM JIT - Gestione on-demand di Ajax e Data.
- * @version 1.4.2
+ * @description Scanner DOM JIT - Gestione on-demand di Ajax e Data con filtri per classi di stato.
+ * @version 1.4.3
  */
 
 (function(var_o_root) {
@@ -49,7 +49,9 @@
         var var_s_prefix = "obj-";
         var var_b_pending = false;
 
-        // Se Ajax o Data stanno caricando, consideriamo 'pending' per ri-scansionare dopo
+        // MODIFICA: Lista di parole riservate che iniziano con obj- ma non sono componenti UI
+        var var_o_reserved = { "ready": true, "loading": true, "active": true, "error": true };
+
         if (this.var_a_loadingQueue["Ajax"] === "loading" || this.var_a_loadingQueue["Data"] === "loading") {
             var_b_pending = true;
         }
@@ -98,7 +100,11 @@
 
                         var var_s_compName = var_a_parts[1];
 
-                        // Controllo rigoroso contro i loop: se è 'undefined', il modulo non esiste ANCORA in memoria
+                        // MODIFICA: Se il nome è tra i riservati (es. ready), ignoriamo il caricamento componenti
+                        if (var_o_reserved[var_s_compName]) {
+                            continue;
+                        }
+
                         if (typeof this[var_s_compName] === "undefined") {
                             if (this.var_a_loadingQueue[var_s_compName] !== "loading") {
                                 this.var_a_loadingQueue[var_s_compName] = "loading";

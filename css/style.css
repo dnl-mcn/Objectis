@@ -15,6 +15,17 @@ html, body {
     font-size: 10pt;
 }
 
+/* * Stato iniziale: nascosto per evitare flickering. 
+ * Usiamo visibility:hidden così il layout engine può calcolare le altezze.
+ */
+ body {
+    visibility: hidden;
+}
+
+/* Classe che verrà applicata dal Kernel al termine del caricamento */
+body.obj-ready {
+    visibility: visible;
+}
 
 /* BLOG START */
 #main-viewport {
