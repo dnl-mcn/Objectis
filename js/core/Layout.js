@@ -1,7 +1,7 @@
 /**
  * @file Layout.js
- * @description Motore di rendering ricorsivo - Versione Heartbeat Sync.
- * @version 1.4.0
+ * @description Motore di rendering - Fix per blocco altezza radice (HTML/BODY) in IE6.
+ * @version 1.4.3
  */
 
 (function(var_o_root) {
@@ -47,21 +47,41 @@
         fixLayout: function() {
             this.init(); // Assicura che i listener siano attivi
             var var_o_main = document.getElementById("main-viewport");
+            var var_o_html = document.documentElement;
+            var var_o_body = document.body;
             
-            // Fix critico IE6: Se il viewport non ha altezza, usiamo l'altezza della finestra
             if (var_o_main) {
+                // --- RESET RADICE PROFONDO ---
+                // Forziamo HTML e BODY a 1px per rompere il lock dell'altezza di IE6
+                var_o_html.style.height = "1px";
+                var_o_body.style.height = "1px";
+                var_o_main.style.display = "none";
+
+                // Forza il browser a dimenticare lo scroll precedente che blocca il layout
+                window.scrollTo(0, 0);
+
                 var var_n_winH = 0;
-                // Calcolo altezza finestra cross-browser
-                if (document.documentElement && document.documentElement.clientHeight) {
-                    var_n_winH = document.documentElement.clientHeight;
-                } else if (document.body) {
-                    var_n_winH = document.body.clientHeight;
+                var var_n_winW = 0;
+
+                // Misurazione del viewport reale (quello che l'utente vede)
+                if (var_o_html && var_o_html.clientHeight) {
+                    var_n_winH = var_o_html.clientHeight;
+                    var_n_winW = var_o_html.clientWidth;
+                } else {
+                    var_n_winH = var_o_body.clientHeight;
+                    var_n_winW = var_o_body.clientWidth;
                 }
                 
+                // Ripristiniamo la gerarchia
+                var_o_html.style.height = "100%";
+                var_o_body.style.height = "100%";
+                var_o_main.style.display = "block";
+
                 if (var_o_main.className.indexOf("obj-layout-full") !== -1) {
                     // Invece di 0px, usiamo l'altezza calcolata direttamente 
                     // per evitare il blackout visivo
                     var_o_main.style.height = var_n_winH + "px";
+                    var_o_main.style.width = var_n_winW + "px"; // Forza anche la larghezza
                 }
                 
                 var_o_main.style.zoom = "1";
@@ -82,12 +102,16 @@
             var var_n_totalHUsed = 0;
             var var_a_expandRows = [];
             
-            // RESET SELETTIVO: Portiamo a 1px solo le righe expand per permettere lo shrink
-            // senza causare il blackout dell'intero viewport.
+            // RESET: Forziamo l'overflow hidden per evitare scrollbar fantasma durante il calcolo
+            var_o_parent.style.overflow = "hidden";
+
             for (var var_n_res = 0; var_n_res < var_a_children.length; var_n_res++) {
                 var var_o_res = var_a_children[var_n_res];
-                if (var_o_res.nodeType === 1 && var_o_res.className && var_o_res.className.indexOf("obj-layout-row-expand") !== -1) {
-                    var_o_res.style.height = "1px";
+                if (var_o_res.nodeType === 1 && var_o_res.className) {
+                    if (var_o_res.className.indexOf("obj-layout-row-expand") !== -1) {
+                        // MODIFICA: Invece di 1px, mettiamo 0px per un istante
+                        var_o_res.style.height = "0px";
+                    }
                 }
             }
 
@@ -101,7 +125,6 @@
                     
                     // IE6 BUG FIX: Reset font-size per permettere altezze arbitrarie
                     var_o_child.style.zoom = "1";
-                    var_o_child.style.overflow = "hidden";
                     
                     // MODIFICA: Azzeriamo il font solo se la riga è un contenitore strutturale.
                     // Se contiene testo (no classi obj-layout-), ripristiniamo la visibilità.
@@ -163,6 +186,14 @@
             var var_n_totalWUsed = 0;
             var var_a_expandCols = [];
 
+            // Reset orizzontale aggressivo
+            for (var var_n_res = 0; var_n_res < var_a_children.length; var_n_res++) {
+                var var_o_res = var_a_children[var_n_res];
+                if (var_o_res.nodeType === 1 && var_o_res.className && var_o_res.className.indexOf("obj-layout-col-expand") !== -1) {
+                    var_o_res.style.width = "0px";
+                }
+            }
+
             for (var var_n_i = 0; var_n_i < var_a_children.length; var_n_i++) {
                 var var_o_child = var_a_children[var_n_i];
                 if (var_o_child && var_o_child.nodeType === 1 && var_o_child.className && var_o_child.className.indexOf("obj-layout-col") !== -1) {
@@ -175,8 +206,6 @@
                     var_a_cols.push(var_o_child);
                     
                     if (var_o_child.className.indexOf("obj-layout-col-expand") !== -1) {
-                        // Reset larghezza per misurazione
-                        var_o_child.style.width = "1px";
                         var_a_expandCols.push(var_o_child);
                     } else {
                         var_n_totalWUsed += var_o_child.offsetWidth || 0;
