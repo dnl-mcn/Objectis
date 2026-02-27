@@ -1,7 +1,7 @@
 /**
  * @file DomScanner.js
- * @description Scanner DOM JIT - Gestione on-demand di Ajax e Data con filtri per classi di stato.
- * @version 1.4.3
+ * @description Scanner DOM JIT - Integrazione Heartbeat Clock e Security.
+ * @version 1.5.0
  */
 
 (function(var_o_root) {
@@ -15,15 +15,17 @@
     var_o_root.Objectis.scan = function() {
         var var_o_self = this;
 
-        // --- CHECK ON-DEMAND CORE MODULES ---
-        // Se la logica tenta di caricare post ma Ajax non c'è, lo iniettiamo
+        // 1. SECURITY LOCKDOWN (Eseguito ad ogni battito di scansione)
+        if (typeof this.lockdown === "function") {
+            this.lockdown();
+        }
+
+        // 2. CHECK ON-DEMAND CORE MODULES
         if (typeof this.Ajax === "undefined" && this.var_a_loadingQueue["Ajax"] !== "loading") {
-            // Verifichiamo se qualche script o componente ha bisogno di Ajax
-            // In questo caso, lo carichiamo se esiste la funzione loadPosts o simili nella logica
-            if (this.loadPosts || this.var_s_logicPath.indexOf("posts") !== -1) {
+            if (this.loadPosts || (this.var_s_logicPath && this.var_s_logicPath.indexOf("posts") !== -1)) {
                 this.var_a_loadingQueue["Ajax"] = "loading";
                 this.importModule("js/core/Ajax.js", "Ajax");
-                this.log("Iniezione JIT: Ajax.js richiesto dalla logica.", "SYSTEM");
+                this.log("Iniezione JIT: Ajax.js richiesto.", "SYSTEM");
             }
         }
 
@@ -33,10 +35,11 @@
             if (var_a_binds.length > 0 || this.loadPosts) {
                 this.var_a_loadingQueue["Data"] = "loading";
                 this.importModule("js/core/Data.js", "Data");
-                this.log("Iniezione JIT: Data.js richiesto per binding.", "SYSTEM");
+                this.log("Iniezione JIT: Data.js richiesto.", "SYSTEM");
             }
         }
 
+        // 3. CONGELAMENTO DOM PER IE6
         var var_a_liveElements = document.getElementsByTagName("*");
         var var_a_staticElements = [];
         
@@ -56,6 +59,7 @@
             var_b_pending = true;
         }
 
+        // 4. CICLO DI ANALISI COMPONENTI
         for (var var_n_i = 0; var_n_i < var_a_staticElements.length; var_n_i++) {
             var var_o_el = var_a_staticElements[var_n_i];
             
@@ -73,7 +77,7 @@
                     // Regola: deve iniziare con il prefisso
                     if (var_s_name.indexOf(var_s_prefix) === 0) {
                         
-                        // ECCEZIONE LAYOUT: Gestione colonne e griglie
+                        // Gestione Layout
                         if (var_s_name.indexOf("obj-layout-") === 0) {
                             if (this.var_a_loadingQueue["layout"] !== "loaded") {
                                 this.var_a_loadingQueue["layout"] = "loaded";
@@ -99,12 +103,9 @@
                         }
 
                         var var_s_compName = var_a_parts[1];
+                        if (var_o_reserved[var_s_compName]) continue;
 
-                        // MODIFICA: Se il nome è tra i riservati (es. ready), ignoriamo il caricamento componenti
-                        if (var_o_reserved[var_s_compName]) {
-                            continue;
-                        }
-
+                        // Se il componente non è ancora carico, lo mettiamo in coda
                         if (typeof this[var_s_compName] === "undefined") {
                             if (this.var_a_loadingQueue[var_s_compName] !== "loading") {
                                 this.var_a_loadingQueue[var_s_compName] = "loading";
@@ -116,7 +117,7 @@
                             continue;
                         }
 
-                        // Se il componente è una funzione (caricato correttamente), lo istanziamo
+                        // Istanziazione Componente
                         if (typeof this[var_s_compName] === "function") {
                             // Segniamo come inizializzato istantaneamente prima di qualsiasi esecuzione
                             var_o_el._obj_init = true;
@@ -132,7 +133,7 @@
                                         var_o_instance.init();
                                     }
                                 } catch (var_o_err) {
-                                    this.log("Errore: " + var_o_err.message, "ERROR");
+                                    this.log("Errore istanza: " + var_o_err.message, "ERROR");
                                 }
                             }
                             
@@ -146,13 +147,23 @@
             }
         }
 
+        // 5. GESTIONE RICORSIONE TRAMITE TIMEENGINE (Sostituzione setTimeout)
         if (var_b_pending) {
-            setTimeout(function() { var_o_self.scan(); }, 100); // 100ms è sufficiente per il re-check
+            if (this.TimeEngine) {
+                this.TimeEngine.addAction(function() { var_o_self.scan(); }, 100, true);
+            } else {
+                // Fallback se TimeEngine non è ancora pronto durante il boot iniziale
+                setTimeout(function() { var_o_self.scan(); }, 100);
+            }
         } else {
             // Se non ci sono più pendenti, il framework è "stabile"
             // Lanciamo il ricalcolo layout con supporto per colonne expand
             if (typeof this.Layout !== "undefined" && typeof this.Layout.fixLayout === "function") {
-                setTimeout(function() { var_o_self.Layout.fixLayout(); }, 50);
+                if (this.TimeEngine) {
+                    this.TimeEngine.addAction(function() { var_o_self.Layout.fixLayout(); }, 50, false);
+                } else {
+                    setTimeout(function() { var_o_self.Layout.fixLayout(); }, 50);
+                }
             }
             this.log("Scansione completata e layout stabilizzato.", "SYSTEM");
         }

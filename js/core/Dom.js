@@ -1,7 +1,7 @@
 /**
  * @file Dom.js
- * @description Utility DOM con calcolo rettangoli potenziato per IE6.
- * @version 1.3.1
+ * @description Utility DOM con calcolo rettangoli e requestFrame sincronizzato.
+ * @version 1.4.0
  */
 
 (function(var_o_root) {
@@ -9,10 +9,29 @@
         var_o_root.Objectis = { var_a_components: {} };
     }
 
+    /**
+     * @method requestFrame
+     * @description Simula requestAnimationFrame agganciandosi al TimeEngine o ai 32ms (fallback).
+     */
     var_o_root.Objectis.requestFrame = function(var_f_callback) {
-        var var_f_raf = window.requestAnimationFrame ||
-                        function(var_f_cb) { return window.setTimeout(var_f_cb, 32); };
-        return var_f_raf(var_f_callback);
+        var var_o_self = this;
+        
+        // Se disponibile l'API nativa moderna, la usiamo
+        if (window.requestAnimationFrame) {
+            return window.requestAnimationFrame(var_f_callback);
+        }
+
+        // Se il TimeEngine è attivo, ci accodiamo al prossimo tick (100ms o meno)
+        // Questo garantisce che le animazioni non avvengano mentre il framework è occupato
+        if (this.TimeEngine) {
+            this.TimeEngine.addAction(function() {
+                var_f_callback();
+            }, 0, false); // Esecuzione al prossimo tick utile
+            return "heartbeat_frame";
+        }
+
+        // Fallback estremo per IE6 se il TimeEngine non fosse ancora caricato
+        return window.setTimeout(var_f_callback, 32);
     };
 
     var_o_root.Objectis.getRect = function(var_o_el) {
@@ -22,9 +41,10 @@
         var var_n_w = var_o_el.offsetWidth;
         var var_n_h = var_o_el.offsetHeight;
         
-        // Fallback per IE6 se offsetHeight è 0 ma l'elemento deve essere visibile
+        // IE6/7 a volte restituisce 0 se l'elemento non ha 'layout'
         if (var_n_h === 0 && var_o_el.style.display !== 'none') {
-            var_n_h = parseInt(var_o_el.currentStyle.height, 10) || 0;
+            var var_s_h = (var_o_el.currentStyle) ? var_o_el.currentStyle.height : "0";
+            var_n_h = parseInt(var_s_h, 10) || 0;
         }
 
         var var_n_t = 0;

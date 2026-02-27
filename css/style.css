@@ -18,12 +18,12 @@ html, body {
 /* * Stato iniziale: nascosto per evitare flickering. 
  * Usiamo visibility:hidden così il layout engine può calcolare le altezze.
  */
- body {
+ body * {
     visibility: hidden;
 }
 
 /* Classe che verrà applicata dal Kernel al termine del caricamento */
-body.obj-ready {
+body.obj-ready * {
     visibility: visible;
 }
 
@@ -53,3 +53,18 @@ body.obj-ready {
 .post-date { font-style: italic; color: #666; font-size: 11px; }
 .post-author { text-align: right; font-weight: bold; margin-top: 10px; }
 /* BLOG STOP */
+
+
+
+
+
+a {
+    text-decoration:none;
+    color: #090;
+}
+
+.header,
+.navbar,
+.footer {
+    text-align:center;
+}

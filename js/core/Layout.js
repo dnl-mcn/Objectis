@@ -1,7 +1,7 @@
 /**
  * @file Layout.js
- * @description Motore di rendering ricorsivo - Supporto IE6 Box Model e Fix visibilità font.
- * @version 1.3.2
+ * @description Motore di rendering ricorsivo - Versione Heartbeat Sync.
+ * @version 1.4.0
  */
 
 (function(var_o_root) {
@@ -9,7 +9,7 @@
 
     var_o_root.Objectis.Layout = {
         var_b_initialized: false,
-        var_n_resizeTimer: null,
+        var_b_resizePending: false, // Flag per gestire il debounce nel clock
 
         /**
          * @method init
@@ -19,12 +19,23 @@
             var var_o_self = this;
             if (this.var_b_initialized) return;
             
-            // Fix IE6: Debounce del resize per prevenire crash e loop infiniti
+            // Fix IE6: Utilizziamo il clock per gestire il ridimensionamento senza saturare la CPU
             window.onresize = function() { 
-                if (var_o_self.var_n_resizeTimer) clearTimeout(var_o_self.var_n_resizeTimer);
-                var_o_self.var_n_resizeTimer = setTimeout(function() {
-                    var_o_self.fixLayout();
-                }, 50);
+                if (var_o_self.var_b_resizePending) return;
+                var_o_self.var_b_resizePending = true;
+
+                if (window.Objectis.TimeEngine) {
+                    window.Objectis.TimeEngine.addAction(function() {
+                        var_o_self.var_b_resizePending = false;
+                        var_o_self.fixLayout();
+                    }, 100, false); // Debounce di 100ms sincronizzato
+                } else {
+                    // Fallback se il motore tempo non è ancora pronto
+                    setTimeout(function() {
+                        var_o_self.var_b_resizePending = false;
+                        var_o_self.fixLayout();
+                    }, 100);
+                }
             };
             this.var_b_initialized = true;
         },
@@ -202,13 +213,21 @@
             }
         },
 
+        /**
+         * @method requestScrollbar
+         * Iniezione asincrona tramite Heartbeat per stabilità DOM.
+         */
         requestScrollbar: function(var_o_el) {
             if (!var_o_el || var_o_el.className.indexOf("obj-scrollbar") !== -1) return;
             var_o_el.className += " obj-scrollbar";
             var_o_el.style.zoom = "1";
-            setTimeout(function() {
-                if (window.Objectis && window.Objectis.scan) window.Objectis.scan();
-            }, 10);
+            
+            // Usiamo il clock per attivare lo scan dei nuovi componenti scrollbar
+            if (window.Objectis.TimeEngine) {
+                window.Objectis.TimeEngine.addAction(function() {
+                    if (window.Objectis.scan) window.Objectis.scan();
+                }, 10, false);
+            }
         },
 
         fixHeights: function() { this.fixLayout(); }

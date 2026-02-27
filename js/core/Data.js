@@ -1,7 +1,7 @@
 /**
  * @file Data.js
- * @description Gestore Data Binding - Supporta liste, placeholder negli attributi e caricamento on-demand.
- * @version 1.1.1
+ * @description Gestore Data Binding - Supporta liste, placeholder e sincronizzazione Heartbeat.
+ * @version 1.2.0
  */
 
 (function(var_o_root) {
@@ -37,7 +37,7 @@
                 }
             }
 
-            // FASE 2: Caricamento Lazy di TimeEngine se necessario
+            // FASE 2: Caricamento Lazy di TimeEngine se necessario (tramite Heartbeat)
             if (var_b_needsTime && typeof Objectis.formatDate === "undefined") {
                 if (!Objectis.var_a_loadingQueue) Objectis.var_a_loadingQueue = {};
                 if (Objectis.var_a_loadingQueue["TimeEngine"] !== "loading") {
@@ -46,11 +46,17 @@
                     Objectis.importModule("js/core/TimeEngine.js", "TimeEngine");
                 }
                 
-                // MODIFICA: Utilizzo di setTimeout invece di setInterval per una ricorsione più sicura.
-                setTimeout(function() {
-                    var_o_self.bind(var_v_dataset);
-                }, 50);
-                return; // Interrompiamo l'esecuzione corrente
+                // MODIFICA: Utilizzo del TimeEngine per la ricorsione se disponibile, altrimenti fallback sicuro.
+                if (Objectis.TimeEngine) {
+                    Objectis.TimeEngine.addAction(function() {
+                        var_o_self.bind(var_v_dataset);
+                    }, 50, true);
+                } else {
+                    setTimeout(function() {
+                        var_o_self.bind(var_v_dataset);
+                    }, 50);
+                }
+                return;
             }
 
             // FASE 3: Esecuzione Binding Reale
@@ -134,8 +140,13 @@
             
             Objectis.log("Data Binding completato.", "DATA");
 
+            // Notifica il Layout (anche qui tramite Heartbeat per stabilità IE6)
             if (Objectis.Layout && typeof Objectis.Layout.fixHeights === "function") {
-                Objectis.Layout.fixHeights();
+                if (Objectis.TimeEngine) {
+                    Objectis.TimeEngine.addAction(function() { Objectis.Layout.fixHeights(); }, 50, false);
+                } else {
+                    setTimeout(function() { Objectis.Layout.fixHeights(); }, 50);
+                }
             }
         }
     };

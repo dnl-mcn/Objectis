@@ -1,22 +1,21 @@
 /**
  * @file Objectis.js
- * @description Core Framework v1.9.1 - Security Lockdown & Sentinel Edition.
- * @version 1.9.1
+ * @description Core Framework v1.9.2 - Heartbeat Integrated.
+ * @version 1.9.2
  */
 
 if (typeof window.Objectis === "undefined") {
     window.Objectis = {
         var_a_components: {},
         const_B_DEBUG: true,
-        var_s_version: "1.9.1",
+        var_s_version: "1.9.2",
         var_b_isBooting: false,
         var_b_isReady: false,
         var_a_loadingQueue: {},
         var_n_bootRetries: 0,
         const_S_BASE: "", 
         var_s_logicPath: "js/script.js",
-        var_n_safetyTimer: null,
-        var_n_sentinelTimer: null // Timer per il monitoraggio costante
+        var_b_displayUnlocked: false
     };
 }
 
@@ -24,13 +23,13 @@ if (typeof window.Objectis === "undefined") {
  * @method setEvents
  * @description Gestore centralizzato degli eventi globali.
  */
-window.Objectis.setEvents = function() {
-    // Implementazione futura per eventi delegati globali
-    // Per ora funge da entry point richiesto dal DomScanner
-    if (this.const_B_DEBUG) {
-        // this.log("SetEvents richiamato", "SYSTEM");
-    }
-};
+//window.Objectis.setEvents = function() {
+//    // Implementazione futura per eventi delegati globali
+//    // Per ora funge da entry point richiesto dal DomScanner
+//    if (this.const_B_DEBUG) {
+//        // this.log("SetEvents richiamato", "SYSTEM");
+//    }
+//};
 
 /**
  * @method lockdown
@@ -80,36 +79,16 @@ window.Objectis.lockdown = function() {
 };
 
 /**
- * @method startSentinel
- * @description Avvia un monitoraggio costante per IE6.
- */
-window.Objectis.startSentinel = function() {
-    var var_o_self = this;
-    if (this.var_n_sentinelTimer) return;
-    
-    // Controlliamo ogni 2 secondi se qualcuno ha iniettato sporcizia
-    this.var_n_sentinelTimer = setInterval(function() {
-        var_o_self.lockdown();
-    }, 2000);
-};
-
-/**
  * @method unlockDisplay
- * @description Sblocca la visibilità della pagina forzatamente.
+ * @description Sblocca la visibilità della pagina.
  */
 window.Objectis.unlockDisplay = function(var_b_isError) {
-    if (this.var_n_safetyTimer) {
-        clearTimeout(this.var_n_safetyTimer);
-        this.var_n_safetyTimer = null;
-    }
+    if (this.var_b_displayUnlocked) return;
+    this.var_b_displayUnlocked = true;
     
     if (document.body && document.body.className.indexOf("obj-ready") === -1) {
         document.body.className += " obj-ready";
-        if (var_b_isError) {
-            this.log("Timeout sicurezza: sblocco forzato della pagina (possibile errore dati).", "WARNING");
-        } else {
-            this.log("Pagina visibile (layout stabilizzato).", "SYSTEM");
-        }
+        this.log(var_b_isError ? "Timeout sicurezza: sblocco forzato." : "Pagina visibile.", var_b_isError ? "WARNING" : "SYSTEM");
     }
 };
 
@@ -123,10 +102,7 @@ window.Objectis.getBasePathAndLogic = function() {
         if (var_s_src.indexOf("js/core/Objectis.js") !== -1) {
             // 1. Calcolo Base Path
             var var_s_base = var_s_src.split("js/core/Objectis.js")[0];
-            if (var_s_base !== "" && var_s_base.substr(var_s_base.length - 1) !== "/") {
-                var_s_base += "/";
-            }
-            this.const_S_BASE = var_s_base;
+            this.const_S_BASE = (var_s_base !== "" && var_s_base.substr(var_s_base.length - 1) !== "/") ? var_s_base + "/" : var_s_base;
 
             // 2. Logic Parsing (HTML 4.01 Strict Friendly)
             // Legge il testo tra <script> e </script> per trovare "logic: percorso/file.js"
@@ -144,7 +120,7 @@ window.Objectis.getBasePathAndLogic = function() {
 
 /**
  * @method init
- * Inizializza il framework e avvia la sentinella.
+ * @description Inizializza il boot usando il TimeEngine invece di setTimeout sparsi.
  */
 window.Objectis.init = function() {
     var var_o_self = this;
@@ -155,20 +131,31 @@ window.Objectis.init = function() {
         this.getBasePathAndLogic();
     }
 
-    // MODIFICA: Eseguiamo il lockdown immediatamente dopo aver trovato la BASE
+    // Lockdown iniziale e avvio sentinel tramite clock
     if (!this.var_b_isBooting) {
         this.lockdown();
-        this.startSentinel(); // Avvio sentinella periodica
+        // Invece di setInterval, usiamo una funzione ricorsiva nel clock
+        var var_f_sentinel = function() {
+            var_o_self.lockdown();
+            if (var_o_self.TimeEngine) var_o_self.TimeEngine.addAction(var_f_sentinel, 2000, true);
+        };
+        // Carichiamo TimeEngine prima di tutto
+        this.importModule("js/core/TimeEngine.js", "TimeEngine");
     }
 
-    if (!this.var_n_safetyTimer) {
-        this.var_n_safetyTimer = setTimeout(function() {
-            var_o_self.unlockDisplay(true);
-        }, 5000); // 5 secondi di tolleranza
+    // Fail-safe visibility tramite clock (se TimeEngine è già carico)
+    if (this.TimeEngine && !this.var_b_displayUnlocked) {
+        this.TimeEngine.addAction(function() { var_o_self.unlockDisplay(true); }, 5000, false);
     }
 
-    // Controllo dipendenze core
-    if (typeof this.scan !== "function" || (this.var_s_logicPath.indexOf("posts.js") !== -1 && typeof this.Ajax === "undefined")) {
+    // Controllo caricamento TimeEngine e moduli core
+    if (!this.TimeEngine || typeof this.scan !== "function") {
+        this.var_n_bootRetries++;
+        if (this.var_n_bootRetries > 100) return;
+
+        // Qui usiamo l'ultimo setTimeout nativo necessario per caricare il TimeEngine stesso
+        setTimeout(function() { var_o_self.init(); }, 50);
+        
         if (!this.var_b_isBooting) {
             this.var_b_isBooting = true;
             
@@ -183,35 +170,21 @@ window.Objectis.init = function() {
             // o se lo scanner lo richiederà. Per sicurezza lo carichiamo qui per prevenire undefined.
             this.importModule("js/core/Ajax.js", "Ajax");
         }
-        
-        this.var_n_bootRetries++;
-        // KILL-SWITCH Boot: 40 tentativi (circa 4 secondi)
-        if (this.var_n_bootRetries > 40) return;
-
-        setTimeout(function() { var_o_self.init(); }, 100);
         return;
     }
 
-    // Se i moduli core sono pronti, carichiamo la logica della pagina (posts.js)
-    // solo se non è già stata caricata.
+    // Se TimeEngine è pronto, usiamo lui per i cicli di attesa
     if (this.var_a_loadingQueue["script"] !== "loaded") {
         this.importModule(this.var_s_logicPath, "script");
-        
-        // Attendiamo un ultimo ciclo per posts.js
-        setTimeout(function() { var_o_self.init(); }, 50);
+        this.TimeEngine.addAction(function() { var_o_self.init(); }, 100, true);
         return;
     }
 
     // MODIFICA: Il framework è pronto tecnicamente, ma aspettiamo lo scan per mostrare il body.
     this.var_b_isReady = true;
-    this.log("Objectis Ready. Esecuzione scanner...", "SYSTEM");
-    
+    this.log("Objectis Ready (Heartbeat Active).", "SYSTEM");
     this.scan(); 
-    
-    // MODIFICA: Invece di iniettare la classe direttamente, usiamo unlockDisplay
-    setTimeout(function() {
-        var_o_self.unlockDisplay(false);
-    }, 200);
+    this.TimeEngine.addAction(function() { var_o_self.unlockDisplay(false); }, 200, false);
 };
 
 /**
